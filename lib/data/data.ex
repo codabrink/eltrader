@@ -1,4 +1,4 @@
-defmodule Data do
+defmodule ApiData do
   def cache_candles(symbol \\ "BTCUSDT", interval \\ "5m") do
     {:ok, file} = File.open(Path.join("cache", "#{symbol}-#{interval}.json"), [:write])
 
@@ -16,19 +16,19 @@ defmodule Data do
     File.close(file)
   end
 
-  def candle_data(symbol \\ "BTCUSDT", interval \\ "5m") do
-    unless File.exists?(file_path(symbol, interval)) do
-      cache_candles(symbol, interval)
-    end
+  def candles_json(symbol \\ "BTCUSDT", interval \\ "5m") do
+    unless File.exists?(file_path(symbol, interval)), do: cache_candles(symbol, interval)
 
     File.read!(file_path(symbol, interval))
+  end
+
+  def candles(symbol \\ "BTCUSDT", interval \\ "5m") do
+    candles_json(symbol, interval)
     |> Poison.decode!(as: [%Candle{}])
   end
 
   def file_path(symbol, interval) do
-    unless File.exists?(Path.dirname("cache")) do
-      File.mkdir_p!(Path.dirname("cache"))
-    end
+    unless File.exists?(Path.dirname("cache")), do: File.mkdir_p!(Path.dirname("cache"))
 
     Path.join("cache", "#{symbol}-#{interval}.json")
   end

@@ -22,6 +22,9 @@ defmodule Trader.Web.Endpoint do
           "js" ->
             "text/javascript"
 
+          "prices" ->
+            "application/json"
+
           _ ->
             "text/plain"
         end
@@ -46,6 +49,13 @@ defmodule Trader.Web.Endpoint do
     }
   end
 
+  def render(conn) do
+    case conn.path_info do
+      ["prices"] -> ApiData.candles_json()
+      _ -> render_file(conn)
+    end
+  end
+
   def render_file(conn) do
     file =
       conn.path_info
@@ -67,7 +77,8 @@ defmodule Trader.Web.Endpoint do
           conn
           |> route
           |> set_content_type
-          |> send_resp(200, render_file(conn))
+          |> render
+          |> (&send_resp(conn, 200, &1)).()
       end
     rescue
       FunctionClauseError -> send_resp(conn, 404, "Not found")
