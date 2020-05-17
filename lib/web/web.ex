@@ -54,7 +54,7 @@ defmodule Trader.Web.Endpoint do
       |> File.read()
       |> case do
         {:ok, file} -> file
-        {:error, reason} -> reason
+        {:error, reason} -> :file.format_error(reason)
       end
 
     file
