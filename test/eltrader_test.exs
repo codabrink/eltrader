@@ -1,8 +1,8 @@
-defmodule EltraderTest do
+defmodule TraderTest do
   use ExUnit.Case
-  doctest Eltrader
+  doctest Trader
 
   test "greets the world" do
-    assert Eltrader.hello() == :world
+    assert Trader.hello() == :world
   end
 end

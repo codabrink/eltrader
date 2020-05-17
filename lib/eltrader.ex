@@ -1,18 +1,16 @@
-defmodule Eltrader do
-  @moduledoc """
-  Documentation for `Eltrader`.
-  """
+defmodule Trader do
+  use Application
 
-  @doc """
-  Hello world.
+  def start(_type, _args) do
+    children = [
+      Plug.Cowboy.child_spec(
+        scheme: :http,
+        plug: Trader.Web.Endpoint,
+        options: [port: Application.get_env(:webhook_processor, :port)]
+      )
+    ]
 
-  ## Examples
-
-      iex> Eltrader.hello()
-      :world
-
-  """
-  def hello do
-    :world
+    opts = [strategy: :one_for_one, name: Trader.Supervisor]
+    Supervisor.start_link(children, opts)
   end
 end
