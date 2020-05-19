@@ -4,16 +4,19 @@ defmodule Algo do
   end
 
   def generate_frames(candles, config) do
-    candles
-    |> Enum.with_index()
-    |> Enum.reduce(%{prev: nil, frames: []}, fn {c, i}, acc ->
-      frame = %Frame{
-        candle: c,
-        index: i,
-        prev: acc.prev
-      }
+    %{frames: frames} =
+      candles
+      |> Enum.with_index()
+      |> Enum.reduce(%{prev: nil, frames: []}, fn {c, i}, acc ->
+        frame = %Frame{
+          candle: c,
+          index: i,
+          prev: acc.prev
+        }
 
-      %{prev: frame, frames: [acc.frames | frame]}
-    end)
+        %{prev: frame, frames: acc.frames ++ [frame]}
+      end)
+
+    frames
   end
 end

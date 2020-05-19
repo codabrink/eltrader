@@ -1,4 +1,5 @@
 defmodule Frame do
+  @derive {Poison.Encoder, except: [:prev]}
   defstruct [:candle, :index, :momentum, :prev]
 
   def new(frame, config) do

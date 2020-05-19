@@ -51,8 +51,16 @@ defmodule Trader.Web.Endpoint do
 
   def render(conn) do
     case conn.path_info do
-      ["prices"] -> ApiData.candles_json()
-      _ -> render_file(conn)
+      ["prices"] ->
+        a =
+          Algo.run()
+          |> Poison.encode!()
+
+        IO.inspect(a)
+        a
+
+      _ ->
+        render_file(conn)
     end
   end
 
