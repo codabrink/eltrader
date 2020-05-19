@@ -224,7 +224,7 @@ function drawChart(prices) {
       yScale.domain([minP - buffer, maxP + buffer]);
       candles
         .transition()
-        .duration(800)
+        .duration(200)
         .attr("y", (d) => yScale(Math.max(d.candle.open, d.candle.close)))
         .attr("height", (d) =>
           d.candle.open === d.candle.close
@@ -235,7 +235,7 @@ function drawChart(prices) {
 
       stems
         .transition()
-        .duration(800)
+        .duration(200)
         .attr("y1", (d) => yScale(d.candle.high))
         .attr("y2", (d) => yScale(d.candle.low));
 

@@ -8,11 +8,15 @@ defmodule Algo do
       candles
       |> Enum.with_index()
       |> Enum.reduce(%{prev: nil, frames: []}, fn {c, i}, acc ->
-        frame = %Frame{
-          candle: c,
-          index: i,
-          prev: acc.prev
-        }
+        frame =
+          Frame.new(
+            %Frame{
+              candle: c,
+              index: i,
+              prev: acc.prev
+            },
+            config
+          )
 
         %{prev: frame, frames: acc.frames ++ [frame]}
       end)

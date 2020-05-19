@@ -52,12 +52,8 @@ defmodule Trader.Web.Endpoint do
   def render(conn) do
     case conn.path_info do
       ["prices"] ->
-        a =
-          Algo.run()
-          |> Poison.encode!()
-
-        IO.inspect(a)
-        a
+        Algo.run()
+        |> Poison.encode!()
 
       _ ->
         render_file(conn)
