@@ -1,6 +1,6 @@
 defmodule Frame do
   @derive {Poison.Encoder, except: [:prev]}
-  defstruct [:candle, :index, :momentum, :prev]
+  defstruct [:candle, :index, :momentum, :prev, :reversals]
 
   def new(frame, config) do
     momentum = calculate_momentum(frame, config)

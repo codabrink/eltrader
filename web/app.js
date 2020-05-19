@@ -4,6 +4,12 @@ function fetchPrices() {
     .then(drawChart);
 }
 
+let tooltipDiv = d3
+  .select("body")
+  .append("div")
+  .attr("class", "tooltip")
+  .style("opacity", 0);
+
 function drawChart(prices) {
   const months = {
     0: "Jan",
@@ -112,7 +118,9 @@ function drawChart(prices) {
         : yScale(Math.min(d.candle.open, d.candle.close)) -
           yScale(Math.max(d.candle.open, d.candle.close))
     )
-    .attr("fill", (d) => (d.candle.open > d.candle.close ? "red" : "green"));
+    .attr("fill", (d) => (d.candle.open > d.candle.close ? "red" : "green"))
+    .on("mouseover", (d) => candleMouseover(tooltipDiv, d))
+    .on("mouseout", (d) => candleMouseout(tooltipDiv, d));
 
   // draw high and low
   let stems = chartBody
@@ -279,3 +287,21 @@ function wrap(text, width) {
 }
 
 fetchPrices();
+
+function candleMouseover(div, d) {
+  div.transition().duration(200).style("opacity", 1);
+  div
+    .html(
+      `
+  <ul>
+    <li>Momentum: ${Math.round(d.momentum * 100) / 100}</li>
+  </ul>
+`
+    )
+    .style("left", d3.event.pageX + "px")
+    .style("top", d3.event.pageY + "px");
+}
+
+function candleMouseout(div, d) {
+  div.transition().duration(200).style("opacity", 0);
+}
