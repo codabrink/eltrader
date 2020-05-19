@@ -4,11 +4,7 @@ function fetchPrices() {
     .then(drawChart)
 }
 
-let tooltipDiv = d3
-  .select('body')
-  .append('div')
-  .attr('class', 'tooltip')
-  .style('opacity', 0)
+let tooltipDiv = d3.select('body').append('div').attr('class', 'tooltip').style('opacity', 0)
 
 function drawChart(prices) {
   let momentums = prices.map((p) => p.momentum)
@@ -50,11 +46,7 @@ function drawChart(prices) {
   var xmax = d3.max(prices.map((r) => r.Date.getTime()))
   var xScale = d3.scaleLinear().domain([-1, dates.length]).range([0, w])
   var xDateScale = d3.scaleQuantize().domain([0, dates.length]).range(dates)
-  let xBand = d3
-    .scaleBand()
-    .domain(d3.range(-1, dates.length))
-    .range([0, w])
-    .padding(0.3)
+  let xBand = d3.scaleBand().domain(d3.range(-1, dates.length)).range([0, w]).padding(0.3)
   var xAxis = d3
     .axisBottom()
     .scale(xScale)
@@ -98,10 +90,7 @@ function drawChart(prices) {
     .nice()
   svg.append('g').call(d3.axisRight(y2Scale))
 
-  var chartBody = svg
-    .append('g')
-    .attr('class', 'chartBody')
-    .attr('clip-path', 'url(#clip)')
+  var chartBody = svg.append('g').attr('class', 'chartBody').attr('clip-path', 'url(#clip)')
 
   let momentumLine = chartBody
     .append('path')
@@ -132,8 +121,7 @@ function drawChart(prices) {
     .attr('height', (d) =>
       d.candle.open === d.candle.close
         ? 1
-        : yScale(Math.min(d.candle.open, d.candle.close)) -
-          yScale(Math.max(d.candle.open, d.candle.close))
+        : yScale(Math.min(d.candle.open, d.candle.close)) - yScale(Math.max(d.candle.open, d.candle.close))
     )
     .attr('fill', (d) => (d.candle.open > d.candle.close ? 'red' : 'green'))
     .on('mouseover', (d) => candleMouseover(tooltipDiv, d))
@@ -151,20 +139,10 @@ function drawChart(prices) {
     .attr('y1', (d) => yScale(d.candle.high))
     .attr('y2', (d) => yScale(d.candle.low))
     .attr('stroke', (d) =>
-      d.candle.open === d.candle.close
-        ? 'white'
-        : d.candle.open > d.candle.close
-        ? 'red'
-        : 'green'
+      d.candle.open === d.candle.close ? 'white' : d.candle.open > d.candle.close ? 'red' : 'green'
     )
 
-  svg
-    .append('defs')
-    .append('clipPath')
-    .attr('id', 'clip')
-    .append('rect')
-    .attr('width', w)
-    .attr('height', h)
+  svg.append('defs').append('clipPath').attr('id', 'clip').append('rect').attr('width', w).attr('height', h)
 
   const extent = [
     [0, 0],
@@ -198,17 +176,9 @@ function drawChart(prices) {
       })
     )
 
-    candles
-      .attr('x', (d, i) => xScaleZ(i) - (xBand.bandwidth() * t.k) / 2)
-      .attr('width', xBand.bandwidth() * t.k)
-    stems.attr(
-      'x1',
-      (d, i) => xScaleZ(i) - xBand.bandwidth() / 2 + xBand.bandwidth() * 0.5
-    )
-    stems.attr(
-      'x2',
-      (d, i) => xScaleZ(i) - xBand.bandwidth() / 2 + xBand.bandwidth() * 0.5
-    )
+    candles.attr('x', (d, i) => xScaleZ(i) - (xBand.bandwidth() * t.k) / 2).attr('width', xBand.bandwidth() * t.k)
+    stems.attr('x1', (d, i) => xScaleZ(i) - xBand.bandwidth() / 2 + xBand.bandwidth() * 0.5)
+    stems.attr('x2', (d, i) => xScaleZ(i) - xBand.bandwidth() / 2 + xBand.bandwidth() * 0.5)
 
     gX.selectAll('.tick text').call(wrap, xBand.bandwidth())
   }
@@ -233,8 +203,7 @@ function drawChart(prices) {
         .attr('height', (d) =>
           d.candle.open === d.candle.close
             ? 1
-            : yScale(Math.min(d.candle.open, d.candle.close)) -
-              yScale(Math.max(d.candle.open, d.candle.close))
+            : yScale(Math.min(d.candle.open, d.candle.close)) - yScale(Math.max(d.candle.open, d.candle.close))
         )
 
       stems
