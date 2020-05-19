@@ -11,6 +11,8 @@ let tooltipDiv = d3
   .style("opacity", 0);
 
 function drawChart(prices) {
+  let momentum = prices.map((p) => p.momentum);
+
   const months = {
     0: "Jan",
     1: "Feb",
@@ -38,7 +40,7 @@ function drawChart(prices) {
     .attr("width", w + margin.left + margin.right)
     .attr("height", h + margin.top + margin.bottom)
     .append("g")
-    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+    .attr("transform", `translate(${margin.left},${margin.top})`);
 
   let dates = _.map(prices, "Date");
 
@@ -59,18 +61,7 @@ function drawChart(prices) {
       hours = d.getHours();
       minutes = (d.getMinutes() < 10 ? "0" : "") + d.getMinutes();
       amPM = hours < 13 ? "am" : "pm";
-      return (
-        hours +
-        ":" +
-        minutes +
-        amPM +
-        " " +
-        d.getDate() +
-        " " +
-        months[d.getMonth()] +
-        " " +
-        d.getFullYear()
-      );
+      return `${hours}:${minutes}${amPM} ${d.getDate()}/${d.getMonth() + 1}`;
     });
 
   svg
@@ -85,7 +76,7 @@ function drawChart(prices) {
   var gX = svg
     .append("g")
     .attr("class", "axis x-axis") //Assign "axis" class
-    .attr("transform", "translate(0," + h + ")")
+    .attr("transform", `translate(0,${h})`)
     .call(xAxis);
 
   gX.selectAll(".tick text").call(wrap, xBand.bandwidth());
@@ -95,7 +86,16 @@ function drawChart(prices) {
   var yScale = d3.scaleLinear().domain([ymin, ymax]).range([h, 0]).nice();
   var yAxis = d3.axisLeft().scale(yScale);
 
+  y2min = d3.min(prices.map((r) => r.momentum));
+  y2max = d3.max(prices.map((r) => r.momentum));
+  var y2Scale = d3.scaleLinear().domain([y2min, y2max]).range([h, 0]).nice();
+
   var gY = svg.append("g").attr("class", "axis y-axis").call(yAxis);
+  var y2 = d3
+    .scaleLinear()
+    .domain([d3.min(momentum), d3.min(momentum)])
+    .range([h, 0])
+    .nice();
 
   var chartBody = svg
     .append("g")
@@ -169,14 +169,6 @@ function drawChart(prices) {
     var t = d3.event.transform;
     let xScaleZ = t.rescaleX(xScale);
 
-    let hideTicksWithoutLabel = function () {
-      d3.selectAll(".xAxis .tick text").each(function (d) {
-        if (this.innerHTML === "") {
-          this.parentNode.style.display = "none";
-        }
-      });
-    };
-
     gX.call(
       d3.axisBottom(xScaleZ).tickFormat((d, e, target) => {
         if (d >= 0 && d <= dates.length - 1) {
@@ -184,18 +176,9 @@ function drawChart(prices) {
           hours = d.getHours();
           minutes = (d.getMinutes() < 10 ? "0" : "") + d.getMinutes();
           amPM = hours < 13 ? "am" : "pm";
-          return (
-            hours +
-            ":" +
-            minutes +
-            amPM +
-            " " +
-            d.getDate() +
-            " " +
-            months[d.getMonth()] +
-            " " +
-            d.getFullYear()
-          );
+          return `${hours}:${minutes}${amPM} ${d.getDate()}/${
+            d.getMonth() + 1
+          }`;
         }
       })
     );
@@ -211,8 +194,6 @@ function drawChart(prices) {
       "x2",
       (d, i) => xScaleZ(i) - xBand.bandwidth() / 2 + xBand.bandwidth() * 0.5
     );
-
-    hideTicksWithoutLabel();
 
     gX.selectAll(".tick text").call(wrap, xBand.bandwidth());
   }
@@ -247,8 +228,8 @@ function drawChart(prices) {
         .attr("y1", (d) => yScale(d.candle.high))
         .attr("y2", (d) => yScale(d.candle.low));
 
-      gY.transition().duration(800).call(d3.axisLeft().scale(yScale));
-    }, 500);
+      gY.call(d3.axisLeft().scale(yScale));
+    }, 50);
   }
 }
 
@@ -259,7 +240,7 @@ function wrap(text, width) {
       word,
       line = [],
       lineNumber = 0,
-      lineHeight = 1.1, // ems
+      lineHeight = 1.1,
       y = text.attr("y"),
       dy = parseFloat(text.attr("dy")),
       tspan = text
@@ -289,12 +270,12 @@ function wrap(text, width) {
 fetchPrices();
 
 function candleMouseover(div, d) {
-  div.transition().duration(200).style("opacity", 1);
+  div.style("opacity", 1);
   div
     .html(
       `
   <ul>
-    <li>Momentum: ${Math.round(d.momentum * 100) / 100}</li>
+    <li><b>Momentum:</b> ${Math.round(d.momentum * 100) / 100}</li>
   </ul>
 `
     )
@@ -303,5 +284,5 @@ function candleMouseover(div, d) {
 }
 
 function candleMouseout(div, d) {
-  div.transition().duration(200).style("opacity", 0);
+  div.style("opacity", 0);
 }
