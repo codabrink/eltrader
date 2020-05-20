@@ -1,62 +1,33 @@
-import * as momentum from '/momentum_line'
+import * as d3 from 'd3'
 
-function fetchPrices() {
-  fetch('/prices')
-    .then((r) => r.json())
-    .then(drawChart)
-}
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
 let tooltipDiv = d3.select('body').append('div').attr('class', 'tooltip').style('opacity', 0)
 
-function drawChart(prices) {
-  let momentums = prices.map((p) => p.momentum)
-  let lows = prices.map((p) => p.candle.low)
-  let highs = prices.map((p) => p.candle.high)
+export function drawChart(frames) {
+  let momentums = frames.map((f) => f.momentum)
+  let lows = frames.map((f) => f.candle.low)
+  let highs = frames.map((f) => f.candle.high)
 
-  const months = {
-    0: 'Jan',
-    1: 'Feb',
-    2: 'Mar',
-    3: 'Apr',
-    4: 'May',
-    5: 'Jun',
-    6: 'Jul',
-    7: 'Aug',
-    8: 'Sep',
-    9: 'Oct',
-    10: 'Nov',
-    11: 'Dec',
-  }
+  const w = window.innerWidth
+  const h = window.innerHeight
 
-  var dateFormat = d3.timeParse('%Q')
-  for (let price of prices) price.Date = dateFormat(price.candle.open_time)
+  const svg = d3.select('#container').attr('width', w).attr('height', h).append('g')
+  const dates = frames.map((p) => dateFormat(p.candle.open_time))
 
-  const margin = { top: 15, right: 65, bottom: 205, left: 50 },
-    w = window.innerWidth - margin.left - margin.right,
-    h = window.innerHeight - margin.top - margin.bottom
-
-  var svg = d3
-    .select('#container')
-    .attr('width', w + margin.left + margin.right)
-    .attr('height', h + margin.top + margin.bottom)
-    .append('g')
-    .attr('transform', `translate(${margin.left},${margin.top})`)
-
-  let dates = _.map(prices, 'Date')
-
-  var xmin = d3.min(prices.map((r) => r.Date.getTime()))
-  var xmax = d3.max(prices.map((r) => r.Date.getTime()))
-  var xScale = d3.scaleLinear().domain([-1, dates.length]).range([0, w])
-  var xDateScale = d3.scaleQuantize().domain([0, dates.length]).range(dates)
-  let xBand = d3.scaleBand().domain(d3.range(-1, dates.length)).range([0, w]).padding(0.3)
+  var xmin = d3.min(dates.map((r) => r.getTime()))
+  var xmax = d3.max(dates.map((r) => r.getTime()))
+  const xScale = d3.scaleLinear().domain([-1, frames.length]).range([0, w])
+  var xDateScale = d3.scaleQuantize().domain([0, frames.length]).range(dates)
+  let xBand = d3.scaleBand().domain(d3.range(-1, frames.length)).range([0, w]).padding(0.3)
   var xAxis = d3
     .axisBottom()
     .scale(xScale)
-    .tickFormat(function (d, i) {
+    .tickFormat((d, i) => {
       d = dates[i]
-      hours = d.getHours()
-      minutes = (d.getMinutes() < 10 ? '0' : '') + d.getMinutes()
-      amPM = hours < 13 ? 'am' : 'pm'
+      let hours = d.getHours()
+      let minutes = (d.getMinutes() < 10 ? '0' : '') + d.getMinutes()
+      let amPM = hours < 13 ? 'am' : 'pm'
       return `${hours}:${minutes}${amPM} ${d.getDate()}/${d.getMonth() + 1}`
     })
 
@@ -75,7 +46,7 @@ function drawChart(prices) {
     .attr('transform', `translate(0,${h})`)
     .call(xAxis)
 
-  gX.selectAll('.tick text').call(wrap, xBand.bandwidth())
+  // gX.selectAll('.tick text').call(wrap, xBand.bandwidth())
 
   let yScale = d3
     .scaleLinear()
@@ -114,7 +85,7 @@ function drawChart(prices) {
   // draw rectangles
   let candles = chartBody
     .selectAll('.candle')
-    .data(prices)
+    .data(frames)
     .enter()
     .append('rect')
     .attr('x', (d, i) => xScale(i) - xBand.bandwidth())
@@ -133,7 +104,7 @@ function drawChart(prices) {
   // draw high and low
   let stems = chartBody
     .selectAll('.stem')
-    .data(prices)
+    .data(frames)
     .enter()
     .append('line')
     .attr('class', 'stem')
@@ -171,9 +142,9 @@ function drawChart(prices) {
       d3.axisBottom(xScaleZ).tickFormat((d, e, target) => {
         if (d >= 0 && d <= dates.length - 1) {
           d = dates[d]
-          hours = d.getHours()
-          minutes = (d.getMinutes() < 10 ? '0' : '') + d.getMinutes()
-          amPM = hours < 13 ? 'am' : 'pm'
+          let hours = d.getHours()
+          let minutes = (d.getMinutes() < 10 ? '0' : '') + d.getMinutes()
+          let amPM = hours < 13 ? 'am' : 'pm'
           return `${hours}:${minutes}${amPM} ${d.getDate()}/${d.getMonth() + 1}`
         }
       })
@@ -183,7 +154,7 @@ function drawChart(prices) {
     stems.attr('x1', (d, i) => xScaleZ(i) - xBand.bandwidth() / 2 + xBand.bandwidth() * 0.5)
     stems.attr('x2', (d, i) => xScaleZ(i) - xBand.bandwidth() / 2 + xBand.bandwidth() * 0.5)
 
-    gX.selectAll('.tick text').call(wrap, xBand.bandwidth())
+    // gX.selectAll('.tick text').call(wrap, xBand.bandwidth())
   }
 
   function zoomend() {
@@ -191,13 +162,13 @@ function drawChart(prices) {
     let xScaleZ = t.rescaleX(xScale)
     clearTimeout(resizeTimer)
     resizeTimer = setTimeout(function () {
-      var xmin = new Date(xDateScale(Math.floor(xScaleZ.domain()[0])))
-      xmax = new Date(xDateScale(Math.floor(xScaleZ.domain()[1])))
-      filtered = _.filter(prices, (d) => d.Date >= xmin && d.Date <= xmax)
+      let xmin = new Date(xDateScale(Math.floor(xScaleZ.domain()[0])))
+      let xmax = new Date(xDateScale(Math.floor(xScaleZ.domain()[1])))
+      let filtered = frames.filter((d) => d.Date >= xmin && d.Date <= xmax)
 
       let min = d3.min(filtered, (p) => p.candle.low)
       let max = d3.max(filtered, (p) => p.candle.high)
-      buffer = Math.floor((max - min) * 0.1)
+      let buffer = Math.floor((max - min) * 0.1)
       yScale.domain([min - buffer, max + buffer])
       candles
         .transition()
@@ -209,7 +180,7 @@ function drawChart(prices) {
             : yScale(Math.min(d.candle.open, d.candle.close)) - yScale(Math.max(d.candle.open, d.candle.close))
         )
 
-      momentum.zoomend(momentumLine, filtered, xScale, y2Scale)
+      // momentum.zoomend(momentumLine, filtered, xScale, y2Scale)
       // min = d3.min(filtered, (p) => p.momentum)
       // max = d3.max(filtered, (p) => p.momentum)
       // buffer = Math.floor((max - min) * 0.1)
@@ -237,41 +208,7 @@ function drawChart(prices) {
   }
 }
 
-function wrap(text, width) {
-  text.each(function () {
-    var text = d3.select(this),
-      words = text.text().split(/\s+/).reverse(),
-      word,
-      line = [],
-      lineNumber = 0,
-      lineHeight = 1.1,
-      y = text.attr('y'),
-      dy = parseFloat(text.attr('dy')),
-      tspan = text
-        .text(null)
-        .append('tspan')
-        .attr('x', 0)
-        .attr('y', y)
-        .attr('dy', dy + 'em')
-    while ((word = words.pop())) {
-      line.push(word)
-      tspan.text(line.join(' '))
-      if (tspan.node().getComputedTextLength() > width) {
-        line.pop()
-        tspan.text(line.join(' '))
-        line = [word]
-        tspan = text
-          .append('tspan')
-          .attr('x', 0)
-          .attr('y', y)
-          .attr('dy', ++lineNumber * lineHeight + dy + 'em')
-          .text(word)
-      }
-    }
-  })
-}
-
-fetchPrices()
+const dateFormat = d3.timeParse('%Q')
 
 function candleMouseover(div, d) {
   div.style('opacity', 1)
