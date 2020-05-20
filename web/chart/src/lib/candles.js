@@ -1,4 +1,3 @@
-import React from 'react'
 import * as d3 from 'd3'
 import { getWH } from './chart'
 
@@ -50,9 +49,9 @@ export default function candles({ svg, frames, x }) {
     )
 
   function zoomed({ t, xz }) {
-    candles.attr('x', (d, i) => xz(i) - (xBand.bandwidth() * t.k) / 2).attr('width', xBand.bandwidth() * t.k)
-    stems.attr('x1', (d, i) => xz(i) - xBand.bandwidth() / 2 + xBand.bandwidth() * 0.5)
-    stems.attr('x2', (d, i) => xz(i) - xBand.bandwidth() / 2 + xBand.bandwidth() * 0.5)
+    candles.attr('x', (_, i) => xz(i) - (xBand.bandwidth() * t.k) / 2).attr('width', xBand.bandwidth() * t.k)
+    stems.attr('x1', (_, i) => xz(i) - xBand.bandwidth() / 2 + xBand.bandwidth() * 0.5)
+    stems.attr('x2', (_, i) => xz(i) - xBand.bandwidth() / 2 + xBand.bandwidth() * 0.5)
   }
 
   function zoomend({ frames }) {
