@@ -1,4 +1,5 @@
 import * as d3 from 'd3'
+import _ from 'lodash'
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
@@ -13,7 +14,9 @@ export function drawChart(frames) {
   const h = window.innerHeight
 
   const svg = d3.select('#container').attr('width', w).attr('height', h).append('g')
-  const dates = frames.map((p) => dateFormat(p.candle.open_time))
+
+  for (let frame of frames) frame.Date = dateFormat(frame.candle.open_time)
+  const dates = frames.map((f) => f.Date)
 
   var xmin = d3.min(dates.map((r) => r.getTime()))
   var xmax = d3.max(dates.map((r) => r.getTime()))
@@ -164,7 +167,7 @@ export function drawChart(frames) {
     resizeTimer = setTimeout(function () {
       let xmin = new Date(xDateScale(Math.floor(xScaleZ.domain()[0])))
       let xmax = new Date(xDateScale(Math.floor(xScaleZ.domain()[1])))
-      let filtered = frames.filter((d) => d.Date >= xmin && d.Date <= xmax)
+      let filtered = _.filter(frames, (d) => d.Date >= xmin && d.Date <= xmax)
 
       let min = d3.min(filtered, (p) => p.candle.low)
       let max = d3.max(filtered, (p) => p.candle.high)
