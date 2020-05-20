@@ -163,6 +163,7 @@ export function drawChart(frames) {
     candles.attr('x', (d, i) => xScaleZ(i) - (xBand.bandwidth() * t.k) / 2).attr('width', xBand.bandwidth() * t.k)
     stems.attr('x1', (d, i) => xScaleZ(i) - xBand.bandwidth() / 2 + xBand.bandwidth() * 0.5)
     stems.attr('x2', (d, i) => xScaleZ(i) - xBand.bandwidth() / 2 + xBand.bandwidth() * 0.5)
+    momentum.zoomed(momentumLine, xScaleZ, y2Scale)
 
     // gX.selectAll('.tick text').call(wrap, xBand.bandwidth())
   }
@@ -190,7 +191,7 @@ export function drawChart(frames) {
             : yScale(Math.min(d.candle.open, d.candle.close)) - yScale(Math.max(d.candle.open, d.candle.close))
         )
 
-      momentum.zoomend(momentumLine, filtered, xScale, y2Scale)
+      momentum.zoomend(momentumLine, filtered, xScaleZ, y2Scale)
 
       stems
         .transition()

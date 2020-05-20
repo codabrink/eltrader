@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import './App.css'
+import './scss/app.scss'
 import * as chart from './lib/chart'
 
 function App() {
