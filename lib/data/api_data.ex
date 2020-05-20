@@ -6,7 +6,7 @@ defmodule ApiData do
       HTTPoison.get("https://api.binance.com/api/v3/klines?symbol=#{symbol}&interval=#{interval}")
       |> case do
         {:ok, response} -> response.body
-        {:error, _} -> "Binance api request didn't work"
+        {:error, err} -> IO.inspect(err)
       end
       |> Poison.Parser.parse!(%{keys: :atoms!})
       |> Enum.map(&Candle.new/1)
