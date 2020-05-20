@@ -1,5 +1,6 @@
 import * as d3 from 'd3'
 import _ from 'lodash'
+import * as momentum from './momentum_line'
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
@@ -10,10 +11,16 @@ export function drawChart(frames) {
   let lows = frames.map((f) => f.candle.low)
   let highs = frames.map((f) => f.candle.high)
 
-  const w = window.innerWidth
-  const h = window.innerHeight
+  const margin = { top: 15, right: 50, bottom: 75, left: 50 }
+  const w = window.innerWidth - margin.left - margin.right
+  const h = window.innerHeight - margin.top - margin.bottom
 
-  const svg = d3.select('#container').attr('width', w).attr('height', h).append('g')
+  const svg = d3
+    .select('#container')
+    .attr('width', w + margin.left + margin.right)
+    .attr('height', h + margin.top + margin.bottom)
+    .append('g')
+    .attr('transform', `translate(${margin.left},${margin.top})`)
 
   for (let frame of frames) frame.Date = dateFormat(frame.candle.open_time)
   const dates = frames.map((f) => f.Date)
@@ -72,7 +79,7 @@ export function drawChart(frames) {
   momentumLine
     .append('path')
     .datum(momentums)
-    .attr('class', 'momentum')
+    .attr('class', 'line')
     .attr('fill', 'none')
     .attr('stroke', 'steelblue')
     .attr('opacity', 0.5)
@@ -183,22 +190,7 @@ export function drawChart(frames) {
             : yScale(Math.min(d.candle.open, d.candle.close)) - yScale(Math.max(d.candle.open, d.candle.close))
         )
 
-      // momentum.zoomend(momentumLine, filtered, xScale, y2Scale)
-      // min = d3.min(filtered, (p) => p.momentum)
-      // max = d3.max(filtered, (p) => p.momentum)
-      // buffer = Math.floor((max - min) * 0.1)
-      // y2Scale.domain([min, max])
-      // momentumLine
-      // .select('.momentum')
-      // .transition()
-      // .duration(200)
-      // .attr(
-      // 'd',
-      // d3
-      // .line()
-      // .x((_, i) => xScale(i))
-      // .y(y2Scale)
-      // )
+      momentum.zoomend(momentumLine, filtered, xScale, y2Scale)
 
       stems
         .transition()
