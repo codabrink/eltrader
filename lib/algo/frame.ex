@@ -1,10 +1,12 @@
 defmodule Frame do
   @derive {Poison.Encoder, except: [:prev]}
-  defstruct [:candle, :index, :momentum, :prev, :reversals]
+  defstruct [:candle, :index, :momentum, :prev, reversals: []]
 
   def new(frame, config) do
-    momentum = calculate_momentum(frame, config)
-    %Frame{frame | momentum: momentum}
+    %Frame{
+      frame
+      | momentum: calculate_momentum(frame, config)
+    }
   end
 
   def calculate_momentum(frame, config) do
@@ -22,5 +24,9 @@ defmodule Frame do
       ^index -> frame
       _ -> find_frame(frame.prev, index)
     end
+  end
+
+  def surrounding(frames, index, n) do
+    Enum.slice(frames, Enum.max([index - n, 0]), n * 2 + 1)
   end
 end

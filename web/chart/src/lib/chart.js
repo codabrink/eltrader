@@ -60,7 +60,7 @@ export function drawChart(frames) {
   // gX.selectAll('.tick text').call(wrap, xBand.bandwidth())
 
   var chartBody = svg.append('g').attr('class', 'chartBody').attr('clip-path', 'url(#clip)')
-  indicators.push(Momentum({ svg: chartBody, frames, x }))
+  // indicators.push(Momentum({ svg: chartBody, frames, x }))
   indicators.push(Candles({ svg: chartBody, frames, x }))
 
   svg.append('defs').append('clipPath').attr('id', 'clip').append('rect').attr('width', w).attr('height', h)

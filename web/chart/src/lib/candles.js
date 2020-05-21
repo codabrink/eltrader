@@ -1,4 +1,5 @@
 import * as d3 from 'd3'
+import _ from 'lodash'
 import { getWH } from './chart'
 
 export default function candles({ svg, frames, x }) {
@@ -40,18 +41,39 @@ export default function candles({ svg, frames, x }) {
     .enter()
     .append('line')
     .attr('class', 'stem')
-    .attr('x1', (d, i) => x(i) - xBand.bandwidth() / 2)
-    .attr('x2', (d, i) => x(i) - xBand.bandwidth() / 2)
+    .attr('x1', (d) => x(d.index) - xBand.bandwidth() / 2)
+    .attr('x2', (d) => x(d.index) - xBand.bandwidth() / 2)
     .attr('y1', (d) => y(d.candle.high))
     .attr('y2', (d) => y(d.candle.low))
     .attr('stroke', (d) =>
       d.candle.open === d.candle.close ? 'white' : d.candle.open > d.candle.close ? 'red' : 'green'
     )
 
+  let reversalData = []
+  for (const f of frames) {
+    for (const r of f.reversals) {
+      let _f = _.clone(f)
+      f.reversals = [r]
+      reversalData.push(_f)
+    }
+  }
+
+  let reversals = svg
+    .selectAll('.reversal')
+    .data(reversalData)
+    .enter()
+    .append('circle')
+    .attr('cx', (f) => x(f.index))
+    .attr('cy', (f) => {
+      return f.reversals[0].type === 'top' ? y(f.candle.high) - 15 : y(f.candle.low) + 15
+    })
+    .attr('r', 3)
+
   function zoomed({ t, xz }) {
-    candles.attr('x', (_, i) => xz(i) - (xBand.bandwidth() * t.k) / 2).attr('width', xBand.bandwidth() * t.k)
-    stems.attr('x1', (_, i) => xz(i) - xBand.bandwidth() / 2 + xBand.bandwidth() * 0.5)
-    stems.attr('x2', (_, i) => xz(i) - xBand.bandwidth() / 2 + xBand.bandwidth() * 0.5)
+    candles.attr('x', (f) => xz(f.index) - (xBand.bandwidth() * t.k) / 2).attr('width', xBand.bandwidth() * t.k)
+    stems.attr('x1', (f) => xz(f.index) - xBand.bandwidth() / 2 + xBand.bandwidth() * 0.5)
+    stems.attr('x2', (f) => xz(f.index) - xBand.bandwidth() / 2 + xBand.bandwidth() * 0.5)
+    reversals.attr('cx', (f) => xz(f.index))
   }
 
   function zoomend({ frames }) {
@@ -75,6 +97,13 @@ export default function candles({ svg, frames, x }) {
       .duration(200)
       .attr('y1', (d) => y(d.candle.high))
       .attr('y2', (d) => y(d.candle.low))
+
+    reversals
+      .transition()
+      .duration(200)
+      .attr('cy', (f) => {
+        return f.reversals[0].type === 'top' ? y(f.candle.high) - 15 : y(f.candle.low) + 15
+      })
 
     gY.call(d3.axisLeft().scale(y))
   }

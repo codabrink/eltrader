@@ -1,6 +1,6 @@
 defmodule Algo.Config do
   defstruct momentum_width: 3,
-            reversal_distance: 5
+            reversal_min_distance: 2
 
   def save(config \\ %Algo.Config{}) do
     {:ok, file} = File.open(Path.join("cache", "config.json"), [:write])
