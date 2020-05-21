@@ -1,40 +1,39 @@
 defmodule Reversal do
-  defstruct [:type, :strength]
+  defstruct [:type, :strength, :prev, :prev_of_type, :diff, :frame]
 
-  def merge_reversals([], _, _), do: []
+  def merge_reversals(frames), do: merge_reversals(frames, frames)
 
-  def merge_reversals([frame | tail], frames, config) do
-    surrounding = Frame.surrounding(frames, frame.index, config.reversal_min_distance)
+  def merge_reversals([], _), do: []
 
-    reversals = [
-      bottom_reversal(surrounding, frame, config),
-      top_reversal(surrounding, frame, config)
-    ]
-
+  def merge_reversals([frame | tail], frames) do
     [
       %Frame{
         frame
-        | reversals: Enum.filter(reversals, & &1)
+        | reversals: reversals(frames, frame)
       }
-      | merge_reversals(tail, frames, config)
+      | merge_reversals(tail, frames)
     ]
   end
 
-  def bottom_reversal([], _, _), do: %Reversal{type: :bottom}
+  def reversals(frames, frame) do
+    surrounding = Frame.surrounding(frames, frame.index, C.fetch(:reversal_min_distance))
 
-  def bottom_reversal([head | tail], frame, config) do
-    cond do
-      head.candle.low < frame.candle.low -> nil
-      true -> bottom_reversal(tail, frame, config)
-    end
+    Enum.filter(
+      [
+        create_reversal(:top, surrounding, frame),
+        create_reversal(:bottom, surrounding, frame)
+      ],
+      & &1
+    )
   end
 
-  def top_reversal([], _, _), do: %Reversal{type: :top}
+  defp create_reversal(type, [], frame), do: %Reversal{type: type, frame: frame}
 
-  def top_reversal([head | tail], frame, config) do
+  defp create_reversal(type, [head | tail], frame) do
     cond do
-      head.candle.high > frame.candle.high -> nil
-      true -> top_reversal(tail, frame, config)
+      type == :top && head.candle.high > frame.candle.high -> nil
+      type == :bottom && head.candle.low < frame.candle.low -> nil
+      true -> create_reversal(type, tail, frame)
     end
   end
 end

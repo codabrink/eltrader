@@ -2,15 +2,15 @@ defmodule Frame do
   @derive {Poison.Encoder, except: [:prev]}
   defstruct [:candle, :index, :momentum, :prev, reversals: []]
 
-  def new(frame, config) do
+  def new(frame) do
     %Frame{
       frame
-      | momentum: calculate_momentum(frame, config)
+      | momentum: calculate_momentum(frame)
     }
   end
 
-  def calculate_momentum(frame, config) do
-    find_frame(frame, frame.index - config.momentum_width)
+  def calculate_momentum(frame) do
+    find_frame(frame, frame.index - C.fetch(:momentum_width))
     |> case do
       nil -> 0
       f -> frame.candle.close - f.candle.open

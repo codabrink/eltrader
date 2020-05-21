@@ -1,25 +1,22 @@
 defmodule Algo do
   def run() do
-    config = %Algo.Config{}
+    C.init()
 
     ApiData.candles()
-    |> to_frames(0, nil, config)
-    |> (&Reversal.merge_reversals(&1, &1, config)).()
+    |> to_frames(0, nil)
+    |> Reversal.merge_reversals()
   end
 
-  defp to_frames([], _i, _prev, _config), do: []
+  defp to_frames([], _, _), do: []
 
-  defp to_frames([candle | tail], i, prev, config) do
+  defp to_frames([candle | tail], i, prev) do
     frame =
-      Frame.new(
-        %Frame{
-          candle: candle,
-          index: i,
-          prev: prev
-        },
-        config
-      )
+      Frame.new(%Frame{
+        candle: candle,
+        index: i,
+        prev: prev
+      })
 
-    [frame | to_frames(tail, i + 1, frame, config)]
+    [frame | to_frames(tail, i + 1, frame)]
   end
 end
