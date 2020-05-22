@@ -4,7 +4,7 @@ defmodule Algo do
 
     ApiData.candles()
     |> to_frames(0, nil)
-    |> Reversal.merge_reversals()
+    |> Reversal.reversals()
   end
 
   defp to_frames([], _, _), do: []

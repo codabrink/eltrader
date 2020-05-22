@@ -1,6 +1,6 @@
 defmodule Frame do
   @derive {Poison.Encoder, except: [:prev]}
-  defstruct [:candle, :index, :momentum, :prev, reversals: []]
+  defstruct [:candle, :index, :momentum, :prev, :top_reversal, :bottom_reversal, :wick]
 
   def new(frame) do
     %Frame{

@@ -49,31 +49,29 @@ export default function candles({ svg, frames, x }) {
       d.candle.open === d.candle.close ? 'white' : d.candle.open > d.candle.close ? 'red' : 'green'
     )
 
-  let reversalData = []
-  for (const f of frames) {
-    for (const r of f.reversals) {
-      let _f = _.clone(f)
-      f.reversals = [r]
-      reversalData.push(_f)
-    }
+  let addReversals = (type) => {
+    let _frames = _.filter(frames, (f) => f[`${type}_reversal`])
+    return svg
+      .selectAll('.reversal-' + type)
+      .data(_frames)
+      .enter()
+      .append('circle')
+      .attr('cx', (f) => x(f.index))
+      .attr('cy', (f) => {
+        return type === 'top' ? y(f.candle.high) - 15 : y(f.candle.low) + 15
+      })
+      .attr('r', 3)
   }
 
-  let reversals = svg
-    .selectAll('.reversal')
-    .data(reversalData)
-    .enter()
-    .append('circle')
-    .attr('cx', (f) => x(f.index))
-    .attr('cy', (f) => {
-      return f.reversals[0].type === 'top' ? y(f.candle.high) - 15 : y(f.candle.low) + 15
-    })
-    .attr('r', 3)
+  let topReversals = addReversals('top')
+  let bottomReversals = addReversals('bottom')
 
   function zoomed({ t, xz }) {
     candles.attr('x', (f) => xz(f.index) - (xBand.bandwidth() * t.k) / 2).attr('width', xBand.bandwidth() * t.k)
     stems.attr('x1', (f) => xz(f.index) - xBand.bandwidth() / 2 + xBand.bandwidth() * 0.5)
     stems.attr('x2', (f) => xz(f.index) - xBand.bandwidth() / 2 + xBand.bandwidth() * 0.5)
-    reversals.attr('cx', (f) => xz(f.index))
+    topReversals.attr('cx', (f) => xz(f.index))
+    bottomReversals.attr('cx', (f) => xz(f.index))
   }
 
   function zoomend({ frames }) {
@@ -98,12 +96,14 @@ export default function candles({ svg, frames, x }) {
       .attr('y1', (d) => y(d.candle.high))
       .attr('y2', (d) => y(d.candle.low))
 
-    reversals
+    topReversals
       .transition()
       .duration(200)
-      .attr('cy', (f) => {
-        return f.reversals[0].type === 'top' ? y(f.candle.high) - 15 : y(f.candle.low) + 15
-      })
+      .attr('cy', (f) => y(f.candle.high) - 15)
+    bottomReversals
+      .transition()
+      .duration(200)
+      .attr('cy', (f) => y(f.candle.low) + 15)
 
     gY.call(d3.axisLeft().scale(y))
   }
@@ -116,6 +116,7 @@ export default function candles({ svg, frames, x }) {
 
 function candleMouseover(div, d) {
   div.style('opacity', 1)
+  console.log(d)
   div
     .html(
       `
