@@ -1,6 +1,8 @@
 defmodule C do
   defstruct momentum_width: 3,
-            reversal_min_distance: 2
+            reversal_min_distance: 2,
+            reversal_strength_price_delta_factor: 1,
+            reversal_strength_distance_factor: 1
 
   def init(config \\ %C{}) do
     if :ets.whereis(:algo_config) === :undefined,

@@ -3,7 +3,7 @@ defmodule Reversal do
   defstruct [:type, :strength, :prev_top, :prev_bottom, :diff, :frame, :candle, :constrained]
 
   defmodule Payload do
-    defstruct [:frames, :prev_top, :prev_bottom]
+    defstruct [:frames, :prev, :prev_top, :prev_bottom]
   end
 
   def reversals(frames), do: reversals(frames, %Payload{frames: frames})
@@ -18,7 +18,8 @@ defmodule Reversal do
     p = %{
       p
       | prev_top: top || p.prev_top,
-        prev_bottom: bottom || p.prev_bottom
+        prev_bottom: bottom || p.prev_bottom,
+        prev: top || bottom || p.prev
     }
 
     [
@@ -33,12 +34,11 @@ defmodule Reversal do
 
   defp new(type, [], frame, p) do
     diff =
-      case type do
-        :top ->
-          if p.prev_top, do: frame.candle.close - p.prev_top.candle.close, else: 0
-
-        :bottom ->
-          if p.prev_top, do: frame.candle.close - p.prev_bottom.candle.close, else: 0
+      case {type, p.prev_top, p.prev_bottom} do
+        {:top, nil, _} -> 0
+        {:bottom, _, nil} -> 0
+        {:top, prev_top, _} -> frame.candle.close - prev_top.candle.open
+        {:bottom, _, prev_bottom} -> frame.candle.close - prev_bottom.candle.open
       end
 
     %Reversal{
@@ -48,6 +48,7 @@ defmodule Reversal do
       prev_top: p.prev_top,
       prev_bottom: p.prev_bottom,
       diff: diff,
+      strength: strength(type, frame, p.prev),
       constrained:
         case type do
           :top ->
@@ -65,5 +66,19 @@ defmodule Reversal do
       type === :bottom && head.candle.low < frame.candle.low -> nil
       true -> new(type, tail, frame, p)
     end
+  end
+
+  defp strength(_, _, nil), do: 0
+
+  defp strength(type, frame, prev) do
+    price_delta =
+      case type do
+        :top -> frame.candle.high
+        :bottom -> frame.candle.low
+      end - prev.candle.open
+
+    price_delta = abs(price_delta) * C.fetch(:reversal_strength_price_delta_factor)
+    prev_distance = (frame.index - prev.frame.index) * C.fetch(:reversal_strength_distance_factor)
+    price_delta + prev_distance
   end
 end

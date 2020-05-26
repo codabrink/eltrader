@@ -1,4 +1,19 @@
-defmodule Trader.Web.Endpoint do
+defmodule Api do
+  def run() do
+    children = [
+      Plug.Cowboy.child_spec(
+        scheme: :http,
+        plug: Api.Endpoint,
+        options: [port: Application.get_env(:trader, :port)]
+      )
+    ]
+
+    opts = [strategy: :one_for_one, name: Trader.Supervisor]
+    Supervisor.start_link(children, opts)
+  end
+end
+
+defmodule Api.Endpoint do
   import Plug.Conn
 
   def init(options) do

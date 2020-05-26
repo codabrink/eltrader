@@ -1,5 +1,5 @@
 defmodule ApiData do
-  def cache_candles(symbol \\ "BTCUSDT", interval \\ "5m") do
+  def cache_candles(symbol \\ "BTCUSDT", interval \\ "15m") do
     {:ok, file} = File.open(Path.join("cache", "#{symbol}-#{interval}.json"), [:write])
 
     result =
@@ -16,13 +16,13 @@ defmodule ApiData do
     File.close(file)
   end
 
-  def candles_json(symbol \\ "BTCUSDT", interval \\ "5m") do
+  def candles_json(symbol \\ "BTCUSDT", interval \\ "15m") do
     unless File.exists?(file_path(symbol, interval)), do: cache_candles(symbol, interval)
 
     File.read!(file_path(symbol, interval))
   end
 
-  def candles(symbol \\ "BTCUSDT", interval \\ "5m") do
+  def candles(symbol \\ "BTCUSDT", interval \\ "15m") do
     candles_json(symbol, interval)
     |> Poison.decode!(as: [%Candle{}])
   end

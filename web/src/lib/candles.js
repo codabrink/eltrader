@@ -60,7 +60,7 @@ export default function candles({ svg, frames, x }) {
       .attr('cy', (f) => {
         return type === 'top' ? y(f.candle.high) - 15 : y(f.candle.low) + 15
       })
-      .attr('r', 3)
+      .attr('r', (f) => f[`${type}_reversal`].strength * 0.03 + 1)
   }
 
   let topReversals = addReversals('top')
