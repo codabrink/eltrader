@@ -12,6 +12,8 @@ export function getWH() {
 }
 
 export function drawChart(frames) {
+  console.log(frames)
+
   let indicators = []
 
   const { w, h } = getWH()
@@ -23,7 +25,7 @@ export function drawChart(frames) {
     .append('g')
     .attr('transform', `translate(${margin.left},${margin.top})`)
 
-  for (let frame of frames) frame.Date = dateFormat(frame.candle.open_time)
+  for (let frame of frames) frame.Date = dateFormat(frame.open_time)
   const dates = frames.map((f) => f.Date)
 
   const x = d3.scaleLinear().domain([-1, frames.length]).range([0, w])

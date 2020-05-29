@@ -24,7 +24,7 @@ defmodule Candle do
     body_geom = %Geo.LineString{coordinates: [{open_time, open}, {open_time, close}]}
     stem_geom = %Geo.LineString{coordinates: [{open_time, high}, {open_time, low}]}
 
-    %Candle{
+    %Frame{
       open_time: open_time,
       open: open,
       high: high,

@@ -1,5 +1,6 @@
 defmodule Reversal do
   @derive {Poison.Encoder, except: [:frame, :candle, :prev_top, :prev_bottom]}
+  @type rev_type :: :top | :bottom
   defstruct [
     :type,
     :strength,
@@ -7,7 +8,6 @@ defmodule Reversal do
     :prev_bottom,
     :diff,
     :frame,
-    :c,
     :constrained,
     :distance
   ]
@@ -71,15 +71,15 @@ defmodule Reversal do
 
   defp new(type, [head | tail], frame, p) do
     cond do
-      type === :top && head.frame.high > frame.high -> nil
-      type === :bottom && head.frame.low < frame.low -> nil
+      type === :top && head.high > frame.high -> nil
+      type === :bottom && head.low < frame.low -> nil
       true -> new(type, tail, frame, p)
     end
   end
 
   defp strength(_, _, nil), do: 0
 
-  defp strength(type, frame, prev) do
+  defp strength(type, %Frame{} = frame, prev) do
     price_delta =
       case type do
         :top -> frame.high
@@ -91,14 +91,15 @@ defmodule Reversal do
     price_delta + prev_distance
   end
 
-  defp distance(frame, type), do: distance(frame, frame.prev, type, 1)
-  defp distance(_frame, nil, _type, distance), do: distance
+  defp distance(%Frame{} = frame, type), do: distance(frame, frame.prev, type, 1)
+  defp distance(_frame, nil, _type, dist), do: dist
 
-  defp distance(frame, prev, type, distance) do
+  @spec distance(%Frame{}, %Frame{}, rev_type, number) :: number
+  defp distance(frame, prev, type, dist) do
     cond do
-      type === :top && prev.high > frame.high -> distance
-      type === :bottom && prev.low < frame.low -> distance
-      true -> distance(frame, frame.prev, type, distance + 1)
+      type === :top && prev.high > frame.high -> dist
+      type === :bottom && prev.low < frame.low -> dist
+      true -> distance(frame.prev, frame.prev.prev, type, dist + 1)
     end
   end
 end

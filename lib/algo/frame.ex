@@ -22,8 +22,10 @@ defmodule Frame do
   ]
 
   def new(candle, prev, index) do
+    frame = struct(Frame, Map.from_struct(candle))
+
     %Frame{
-      candle
+      frame
       | prev: prev,
         index: index,
         momentum: calculate_momentum(candle, prev, index)
@@ -34,7 +36,7 @@ defmodule Frame do
     find_frame(prev, index - C.fetch(:momentum_width))
     |> case do
       nil -> 0
-      f -> candle.close - f.candle.open
+      f -> candle.close - f.open
     end
   end
 
