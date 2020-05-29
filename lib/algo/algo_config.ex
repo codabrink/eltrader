@@ -1,8 +1,11 @@
 defmodule C do
+  # number of candles considered in cancluating momentum
   defstruct momentum_width: 3,
-            reversal_min_distance: 2,
+            # distance from nearest peak needed to be considered a reversal
+            reversal_distance: 2,
             reversal_strength_price_delta_factor: 1,
-            reversal_strength_distance_factor: 1
+            reversal_strength_distance_factor: 1,
+            line_anchor_distance: 30
 
   def init(config \\ %C{}) do
     if :ets.whereis(:algo_config) === :undefined,

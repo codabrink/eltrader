@@ -11,11 +11,11 @@ defmodule Algo do
 
   defp to_frames([candle | tail], i, prev) do
     frame =
-      Frame.new(%Frame{
-        candle: candle,
-        index: i,
-        prev: prev
-      })
+      Frame.new(
+        candle,
+        prev,
+        i
+      )
 
     [frame | to_frames(tail, i + 1, frame)]
   end

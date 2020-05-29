@@ -1,6 +1,5 @@
 import * as d3 from 'd3'
 import _ from 'lodash'
-import Momentum from './momentum_line'
 import Candles from './candles'
 
 // const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']

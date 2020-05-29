@@ -1,19 +1,40 @@
 defmodule Frame do
   @derive {Poison.Encoder, except: [:prev]}
-  defstruct [:candle, :index, :momentum, :prev, :top_reversal, :bottom_reversal, :wick]
+  defstruct [
+    :open_time,
+    :open,
+    :high,
+    :low,
+    :close,
+    :volume,
+    :asset_volume,
+    :close_time,
+    :num_trades,
+    :body_geom,
+    :stem_geom,
+    :index,
+    :momentum,
+    :prev,
+    :top_reversal,
+    :bottom_reversal,
+    :wick,
+    :lines
+  ]
 
-  def new(frame) do
+  def new(candle, prev, index) do
     %Frame{
-      frame
-      | momentum: calculate_momentum(frame)
+      candle
+      | prev: prev,
+        index: index,
+        momentum: calculate_momentum(candle, prev, index)
     }
   end
 
-  def calculate_momentum(frame) do
-    find_frame(frame, frame.index - C.fetch(:momentum_width))
+  def calculate_momentum(candle, prev, index) do
+    find_frame(prev, index - C.fetch(:momentum_width))
     |> case do
       nil -> 0
-      f -> frame.candle.close - f.candle.open
+      f -> candle.close - f.candle.open
     end
   end
 

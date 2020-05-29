@@ -122,6 +122,8 @@ function candleMouseover(div, d) {
       `
       <ul>
         <li><b>Momentum:</b> ${Math.round(d.momentum * 100) / 100}</li>
+        <li><b>High:</b> ${d.candle.high}</li>
+        <li><b>Low:</b> ${d.candle.low}</li>
       </ul>
       `
     )

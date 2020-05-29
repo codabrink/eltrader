@@ -1,17 +1,26 @@
 defmodule Reversal do
   @derive {Poison.Encoder, except: [:frame, :candle, :prev_top, :prev_bottom]}
-  defstruct [:type, :strength, :prev_top, :prev_bottom, :diff, :frame, :candle, :constrained]
+  defstruct [
+    :type,
+    :strength,
+    :prev_top,
+    :prev_bottom,
+    :diff,
+    :frame,
+    :c,
+    :constrained,
+    :distance
+  ]
 
   defmodule Payload do
     defstruct [:frames, :prev, :prev_top, :prev_bottom]
   end
 
   def reversals(frames), do: reversals(frames, %Payload{frames: frames})
-
   defp reversals([], _), do: []
 
   defp reversals([frame | tail], p) do
-    surrounding = Frame.surrounding(p.frames, frame.index, C.fetch(:reversal_min_distance))
+    surrounding = Frame.surrounding(p.frames, frame.index, C.fetch(:reversal_distance))
     top = new(:top, surrounding, frame, p)
     bottom = new(:bottom, surrounding, frame, p)
 
@@ -37,33 +46,33 @@ defmodule Reversal do
       case {type, p.prev_top, p.prev_bottom} do
         {:top, nil, _} -> 0
         {:bottom, _, nil} -> 0
-        {:top, prev_top, _} -> frame.candle.close - prev_top.candle.open
-        {:bottom, _, prev_bottom} -> frame.candle.close - prev_bottom.candle.open
+        {:top, prev_top, _} -> frame.close - prev_top.frame.open
+        {:bottom, _, prev_bottom} -> frame.close - prev_bottom.frame.open
       end
 
     %Reversal{
       type: type,
       frame: frame,
-      candle: frame.candle,
       prev_top: p.prev_top,
       prev_bottom: p.prev_bottom,
+      distance: distance(frame, type),
       diff: diff,
       strength: strength(type, frame, p.prev),
       constrained:
         case type do
           :top ->
-            if p.prev_top, do: p.prev_top.candle.high > frame.candle.high, else: 0
+            if p.prev_top, do: p.prev_top.frame.high > frame.high, else: 0
 
           :bottom ->
-            if p.prev_bottom, do: p.prev_bottom.candle.low < frame.candle.low, else: 0
+            if p.prev_bottom, do: p.prev_bottom.frame.low < frame.low, else: 0
         end
     }
   end
 
   defp new(type, [head | tail], frame, p) do
     cond do
-      type === :top && head.candle.high > frame.candle.high -> nil
-      type === :bottom && head.candle.low < frame.candle.low -> nil
+      type === :top && head.frame.high > frame.high -> nil
+      type === :bottom && head.frame.low < frame.low -> nil
       true -> new(type, tail, frame, p)
     end
   end
@@ -73,12 +82,23 @@ defmodule Reversal do
   defp strength(type, frame, prev) do
     price_delta =
       case type do
-        :top -> frame.candle.high
-        :bottom -> frame.candle.low
-      end - prev.candle.open
+        :top -> frame.high
+        :bottom -> frame.low
+      end - prev.frame.open
 
     price_delta = abs(price_delta) * C.fetch(:reversal_strength_price_delta_factor)
     prev_distance = (frame.index - prev.frame.index) * C.fetch(:reversal_strength_distance_factor)
     price_delta + prev_distance
+  end
+
+  defp distance(frame, type), do: distance(frame, frame.prev, type, 1)
+  defp distance(_frame, nil, _type, distance), do: distance
+
+  defp distance(frame, prev, type, distance) do
+    cond do
+      type === :top && prev.high > frame.high -> distance
+      type === :bottom && prev.low < frame.low -> distance
+      true -> distance(frame, frame.prev, type, distance + 1)
+    end
   end
 end
