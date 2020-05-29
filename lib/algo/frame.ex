@@ -1,5 +1,5 @@
 defmodule Frame do
-  @derive {Poison.Encoder, except: [:prev]}
+  @derive {Poison.Encoder, except: [:prev, :body_geom, :stem_geom]}
   defstruct [
     :open_time,
     :open,
