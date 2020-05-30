@@ -8,8 +8,7 @@ defmodule Reversal do
     :prev_bottom,
     :diff,
     :frame,
-    :constrained,
-    :distance
+    :constrained
   ]
 
   defmodule Payload do
@@ -55,7 +54,6 @@ defmodule Reversal do
       frame: frame,
       prev_top: p.prev_top,
       prev_bottom: p.prev_bottom,
-      distance: distance(frame, type),
       diff: diff,
       strength: strength(type, frame, p.prev),
       constrained:
@@ -89,17 +87,5 @@ defmodule Reversal do
     price_delta = abs(price_delta) * C.fetch(:reversal_strength_price_delta_factor)
     prev_distance = (frame.index - prev.frame.index) * C.fetch(:reversal_strength_distance_factor)
     price_delta + prev_distance
-  end
-
-  defp distance(%Frame{} = frame, type), do: distance(frame, frame.prev, type, 1)
-  defp distance(_frame, nil, _type, dist), do: dist
-
-  @spec distance(%Frame{}, %Frame{}, rev_type, number) :: number
-  defp distance(frame, prev, type, dist) do
-    cond do
-      type === :top && prev.high > frame.high -> dist
-      type === :bottom && prev.low < frame.low -> dist
-      true -> distance(frame.prev, frame.prev.prev, type, dist + 1)
-    end
   end
 end

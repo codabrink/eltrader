@@ -18,7 +18,10 @@ defmodule Frame do
     :top_reversal,
     :bottom_reversal,
     :wick,
-    :lines
+    :lines,
+    :anchors,
+    :bottom_distance,
+    :top_distance
   ]
 
   def new(candle, prev, index) do
@@ -28,6 +31,8 @@ defmodule Frame do
       frame
       | prev: prev,
         index: index,
+        bottom_distance: bottom_distance(frame),
+        top_distance: top_distance(frame),
         momentum: calculate_momentum(candle, prev, index)
     }
   end
@@ -51,5 +56,18 @@ defmodule Frame do
 
   def surrounding(frames, index, n) do
     Enum.slice(frames, Enum.max([index - n, 0]), n * 2 + 1)
+  end
+
+  def top_distance(frame), do: peak_distance(frame, frame.prev, :top, 1)
+  def bottom_distance(frame), do: peak_distance(frame, frame.prev, :bottom, 1)
+
+  def peak_distance(_frame, nil, _type, dist), do: dist
+
+  def peak_distance(frame, prev, type, dist) do
+    cond do
+      type === :top && prev.high > frame.high -> dist
+      type === :bottom && prev.low < frame.low -> dist
+      true -> peak_distance(frame.prev, frame.prev.prev, type, dist + 1)
+    end
   end
 end
