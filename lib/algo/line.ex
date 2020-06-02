@@ -1,19 +1,20 @@
 defmodule Line do
+  @derive [Poison.Encoder]
   @type top_bottom :: :top | :bottom
-  defstruct [:point, :frame, :angle]
+  defstruct [:point, :angle]
 
-  @spec new(%Frame{}, top_bottom) :: %Line{}
-  def new(frame, type) do
-    y =
-      case type do
-        :top -> frame.high
-        :bottom -> frame.low
-      end
+  @spec new(%Frame{}, %Frame{}, top_bottom) :: %Line{}
+  def new(a, b, type) do
+    case type do
+      :top -> new({a.close_time, a.high}, {b.close_time, b.high})
+      :bottom -> new({a.close_time, a.low}, {b.close_time, b.low})
+    end
+  end
 
-    %Geo.Point{coordinates: {frame.close_time, y}}
-
+  defp new({ax, ay}, {bx, by}) do
     %Line{
-      frame: frame
+      angle: Topo.angle({ax, ay}, {bx, by}),
+      point: %Geo.Point{coordinates: {ax, ay}}
     }
   end
 end

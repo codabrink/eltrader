@@ -11,8 +11,9 @@ export function getWH() {
   return { w, h }
 }
 
-export function drawChart(frames) {
-  console.log(frames)
+export function drawChart(data) {
+  console.log(data)
+  let { frames, lines } = data
 
   let indicators = []
 

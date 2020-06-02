@@ -1,10 +1,21 @@
 defmodule Algo do
+  defmodule Payload do
+    defstruct [:frames, :lines]
+  end
+
   def run() do
     C.init()
 
-    ApiData.candles()
-    |> to_frames(0, nil)
-    |> Reversal.reversals()
+    candles = ApiData.candles()
+
+    frames =
+      to_frames(candles, 0, nil)
+      |> Reversal.merge_reversals()
+
+    %Payload{
+      frames: frames,
+      lines: Frame.Lines.new(frames)
+    }
   end
 
   defp to_frames([], _, _), do: []

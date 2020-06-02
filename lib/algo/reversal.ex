@@ -15,10 +15,10 @@ defmodule Reversal do
     defstruct [:frames, :prev, :prev_top, :prev_bottom]
   end
 
-  def reversals(frames), do: reversals(frames, %Payload{frames: frames})
-  defp reversals([], _), do: []
+  def merge_reversals(frames), do: merge_reversals(frames, %Payload{frames: frames})
+  defp merge_reversals([], _), do: []
 
-  defp reversals([frame | tail], p) do
+  defp merge_reversals([frame | tail], p) do
     surrounding = Frame.surrounding(p.frames, frame.index, C.fetch(:reversal_distance))
     top = new(:top, surrounding, frame, p)
     bottom = new(:bottom, surrounding, frame, p)
@@ -36,7 +36,7 @@ defmodule Reversal do
         | top_reversal: top,
           bottom_reversal: bottom
       }
-      | reversals(tail, p)
+      | merge_reversals(tail, p)
     ]
   end
 
