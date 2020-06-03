@@ -5,8 +5,8 @@ defmodule Line do
 
   def new(%Frame{} = a, %Frame{} = b, type) do
     case type do
-      :top -> new(type, a, {a.close_time, a.high}, {b.close_time, b.high})
-      :bottom -> new(type, a, {a.close_time, a.low}, {b.close_time, b.low})
+      :top -> new(type, a, {a.index, a.high}, {b.index, b.high})
+      :bottom -> new(type, a, {a.index, a.low}, {b.index, b.low})
     end
   end
 

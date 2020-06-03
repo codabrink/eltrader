@@ -1,6 +1,6 @@
 defmodule Algo do
   defmodule Payload do
-    defstruct [:frames, :lines]
+    defstruct [:frames, :trend_lines]
   end
 
   def run() do
@@ -10,11 +10,12 @@ defmodule Algo do
 
     frames =
       to_frames(candles, 0, nil)
+      |> Frame.merge_dominion()
       |> Reversal.merge_reversals()
 
     %Payload{
       frames: frames,
-      lines: Frame.Lines.new(frames)
+      trend_lines: TrendLines.new(frames)
     }
   end
 

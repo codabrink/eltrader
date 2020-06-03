@@ -1,4 +1,4 @@
-defmodule Frame.Lines do
+defmodule TrendLines do
   defstruct top_anchors: [], bottom_anchors: [], top_lines: [], bottom_lines: []
 
   defmodule Payload do
@@ -11,7 +11,7 @@ defmodule Frame.Lines do
     [Line.new(a, b, type) | create_lines([b | tail], type)]
   end
 
-  @spec new([%Frame{}]) :: %Frame.Lines{}
+  @spec new([%Frame{}]) :: %TrendLines{}
   def new(frames) do
     anchor_count = floor(C.fetch(:reversal_anchor_pct) / 100 * length(frames))
 
@@ -27,7 +27,7 @@ defmodule Frame.Lines do
       |> Enum.slice(0..anchor_count)
       |> Enum.sort(fn f1, f2 -> f1.close_time >= f2.close_time end)
 
-    %Frame.Lines{
+    %TrendLines{
       top_anchors: top_anchors,
       bottom_anchors: bottom_anchors,
       top_lines: create_lines(top_anchors, :top),

@@ -26,12 +26,12 @@ defmodule Frame do
   def new(candle, prev, index) do
     frame = struct(Frame, Map.from_struct(candle))
 
+    IO.inspect(frame)
+
     %Frame{
       frame
       | prev: prev,
         index: index,
-        bottom_dominion: bottom_dominion(frame),
-        top_dominion: top_dominion(frame),
         momentum: calculate_momentum(candle, prev, index)
     }
   end
@@ -57,16 +57,35 @@ defmodule Frame do
     Enum.slice(frames, Enum.max([index - n, 0]), n * 2 + 1)
   end
 
-  def top_dominion(frame), do: peak_dominion(frame, frame.prev, :top, 1)
-  def bottom_dominion(frame), do: peak_dominion(frame, frame.prev, :bottom, 1)
+  def merge_dominion(frames), do: merge_dominion(frames, frames)
+  def merge_dominion([], _), do: []
 
-  def peak_dominion(_frame, nil, _type, dist), do: dist
+  def merge_dominion([frame | tail], frames) do
+    {first, last} = Util.split_around(frames, frame.index)
 
-  def peak_distance(frame, prev, type, dist) do
+    [
+      %Frame{
+        frame
+        | top_dominion: peak_dominion(frame, {first, last}, :top, 1),
+          bottom_dominion: peak_dominion(frame, {first, last}, :bottom, 1)
+      }
+      | merge_dominion(tail, frames)
+    ]
+  end
+
+  def peak_dominion(_, {[], _}, _, dist), do: dist
+  def peak_dominion(_, {_, []}, _, dist), do: dist
+
+  def peak_dominion(frame, {first, last}, type, dist) do
+    [f | first_tail] = first
+    [l | last_tail] = last
+
     cond do
-      type === :top && prev.high > frame.high -> dist
-      type === :bottom && prev.low < frame.low -> dist
-      true -> peak_distance(frame.prev, frame.prev.prev, type, dist + 1)
+      peak_defeated(type, frame, f, l) -> dist
+      true -> peak_dominion(frame, {first_tail, last_tail}, type, dist + 1)
     end
   end
+
+  defp peak_defeated(:top, frame, f, l), do: f.high > frame.high || l.high > frame.high
+  defp peak_defeated(:bottom, frame, f, l), do: f.low < frame.low || l.low < frame.low
 end
