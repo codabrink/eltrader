@@ -19,13 +19,13 @@ defmodule TrendLines do
       frames
       |> Enum.sort(fn f1, f2 -> f1.bottom_dominion >= f2.bottom_dominion end)
       |> Enum.slice(0..anchor_count)
-      |> Enum.sort(fn f1, f2 -> f1.close_time >= f2.close_time end)
+      |> Enum.sort(fn f1, f2 -> f1.close_time <= f2.close_time end)
 
     top_anchors =
       frames
       |> Enum.sort(fn f1, f2 -> f1.top_dominion >= f2.top_dominion end)
       |> Enum.slice(0..anchor_count)
-      |> Enum.sort(fn f1, f2 -> f1.close_time >= f2.close_time end)
+      |> Enum.sort(fn f1, f2 -> f1.close_time <= f2.close_time end)
 
     %TrendLines{
       top_anchors: top_anchors,

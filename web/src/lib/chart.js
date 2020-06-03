@@ -67,6 +67,7 @@ export function drawChart(data) {
   let candles = Candles({ svg: chartBody, data, x })
   indicators.push(candles)
   let trendLines = TrendLines({ svg: chartBody, data, candles, x })
+  indicators.push(trendLines)
 
   svg.append('defs').append('clipPath').attr('id', 'clip').append('rect').attr('width', w).attr('height', h)
 
