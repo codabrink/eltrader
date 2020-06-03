@@ -1,7 +1,8 @@
 import * as d3 from 'd3'
 import { getWH } from './chart'
 
-export default function momentum({ svg, frames, x }) {
+export default function momentum({ svg, data, x }) {
+  let { frames } = data
   const values = frames.map((f) => f.momentum)
   const { w, h } = getWH()
 

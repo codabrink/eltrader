@@ -2,7 +2,9 @@ import * as d3 from 'd3'
 import _ from 'lodash'
 import { getWH } from './chart'
 
-export default function candles({ svg, frames, x }) {
+export default function candles({ svg, data, x }) {
+  let { frames } = data
+
   let tooltipDiv = d3.select('body').append('div').attr('class', 'tooltip').style('opacity', 0)
   let lows = frames.map((f) => f.low)
   let highs = frames.map((f) => f.high)
@@ -101,6 +103,7 @@ export default function candles({ svg, frames, x }) {
   return {
     zoomed,
     zoomend,
+    getY: () => y,
   }
 }
 

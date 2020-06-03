@@ -8,7 +8,7 @@ defmodule Frame.Lines do
   defp create_lines([_], _), do: []
 
   defp create_lines([a, b | tail], type) do
-    [Line.new(a, b, type), create_lines([b | tail], type)]
+    [Line.new(a, b, type) | create_lines([b | tail], type)]
   end
 
   @spec new([%Frame{}]) :: %Frame.Lines{}
