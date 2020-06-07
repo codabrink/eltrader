@@ -8,9 +8,7 @@ defmodule Candle do
     :volume,
     :close_time,
     :num_trades,
-    :asset_volume,
-    :body_geom,
-    :stem_geom
+    :asset_volume
   ]
 
   def new(rc) do
@@ -21,8 +19,6 @@ defmodule Candle do
     close = String.to_float(Enum.at(rc, 4))
 
     # Consider making geom a square
-    body_geom = %Geo.LineString{coordinates: [{open_time, open}, {open_time, close}]}
-    stem_geom = %Geo.LineString{coordinates: [{open_time, high}, {open_time, low}]}
 
     %Frame{
       open_time: open_time,
@@ -33,9 +29,7 @@ defmodule Candle do
       volume: String.to_float(Enum.at(rc, 5)),
       close_time: Enum.at(rc, 6),
       asset_volume: String.to_float(Enum.at(rc, 7)),
-      num_trades: Enum.at(rc, 8),
-      body_geom: body_geom,
-      stem_geom: stem_geom
+      num_trades: Enum.at(rc, 8)
     }
   end
 end

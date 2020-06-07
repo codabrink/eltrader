@@ -19,6 +19,11 @@ defmodule Algo do
     }
   end
 
+  def runn() do
+    run()
+    nil
+  end
+
   defp to_frames([], _, _), do: []
 
   defp to_frames([candle | tail], i, prev) do

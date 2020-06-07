@@ -1,6 +1,11 @@
 import * as d3 from 'd3'
 import { project } from './util'
 import { group } from 'd3'
+const colors = ['red', 'black', 'green', 'orange', 'purple', 'cyan', 'blue', 'gray']
+
+function rnd(array) {
+  return array[Math.floor(Math.random() * array.length)]
+}
 
 export default function TrendLines({ svg, data, x, candles }) {
   let {
@@ -23,7 +28,7 @@ export default function TrendLines({ svg, data, x, candles }) {
     .attr('x2', (d) => x(d.p2.x))
     .attr('y1', (d) => y(d.p1.y))
     .attr('y2', (d) => y(d.p2.y))
-    .attr('stroke', (d) => 'black')
+    .attr('stroke', (d) => rnd(colors))
 
   let svgBottomLines = svg
     .selectAll('.bottomline')
@@ -35,7 +40,7 @@ export default function TrendLines({ svg, data, x, candles }) {
     .attr('x2', (d) => x(d.p2.x))
     .attr('y1', (d) => y(d.p1.y))
     .attr('y2', (d) => y(d.p2.y))
-    .attr('stroke', (d) => 'black')
+    .attr('stroke', (d) => rnd(colors))
 
   function zoomed({ xz }) {
     svgTopLines.attr('x1', (f) => xz(f.p1.x)).attr('x2', (f) => xz(f.p2.x))
@@ -59,8 +64,10 @@ export default function TrendLines({ svg, data, x, candles }) {
 }
 
 function addPoints(line) {
-  let p1 = { x: line.frame_index, y: line.point.coordinates[1] }
-  let p2 = project(p1, line.angle, 200)
+  let [x1, y1] = line.p1.coordinates
+  let [x2, y2] = line.p2.coordinates
+  let p1 = { x: x1, y: y1 }
+  let p2 = { x: x2, y: y2 }
   line.p1 = p1
   line.p2 = p2
 }

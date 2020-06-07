@@ -26,13 +26,13 @@ defmodule Frame do
   def new(candle, prev, index) do
     frame = struct(Frame, Map.from_struct(candle))
 
-    IO.inspect(frame)
-
     %Frame{
       frame
       | prev: prev,
         index: index,
-        momentum: calculate_momentum(candle, prev, index)
+        momentum: calculate_momentum(candle, prev, index),
+        body_geom: %Geo.LineString{coordinates: [{index, frame.open}, {index, frame.close}]},
+        stem_geom: %Geo.LineString{coordinates: [{index, frame.high}, {index, frame.low}]}
     }
   end
 
@@ -73,19 +73,22 @@ defmodule Frame do
     ]
   end
 
-  def peak_dominion(_, {[], _}, _, dist), do: dist
-  def peak_dominion(_, {_, []}, _, dist), do: dist
+  def peak_dominion(_, {[], []}, _, dist), do: dist
 
   def peak_dominion(frame, {first, last}, type, dist) do
-    [f | first_tail] = first
-    [l | last_tail] = last
+    {f, first_tail} = safe_match(first)
+    {l, last_tail} = safe_match(last)
 
     cond do
-      peak_defeated(type, frame, f, l) -> dist
+      peak_defeated(type, frame, f) || peak_defeated(type, frame, l) -> dist
       true -> peak_dominion(frame, {first_tail, last_tail}, type, dist + 1)
     end
   end
 
-  defp peak_defeated(:top, frame, f, l), do: f.high > frame.high || l.high > frame.high
-  defp peak_defeated(:bottom, frame, f, l), do: f.low < frame.low || l.low < frame.low
+  defp peak_defeated(_, _, nil), do: false
+  defp peak_defeated(:top, frame, f), do: f.high > frame.high
+  defp peak_defeated(:bottom, frame, f), do: f.low < frame.low
+
+  defp safe_match([]), do: {nil, []}
+  defp safe_match([head | tail]), do: {head, tail}
 end

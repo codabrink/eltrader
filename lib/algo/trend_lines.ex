@@ -5,11 +5,29 @@ defmodule TrendLines do
     defstruct [:frames]
   end
 
-  defp create_lines([_], _), do: []
+  defp create_lines(_, [_], _), do: []
 
-  defp create_lines([a, b | tail], type) do
-    [Line.new(a, b, type) | create_lines([b | tail], type)]
+  defp create_lines(frames, [a, b | tail], type) do
+    {p1, p2} =
+      case type do
+        :top -> {{a.index, a.high}, {b.index, b.high}}
+        :bottom -> {{a.index, a.low}, {b.index, b.low}}
+      end
+
+    p1 = %Geo.Point{coordinates: p1}
+    p2 = %Geo.Point{coordinates: p2}
+
+    [
+      case type do
+        :top -> Line.new(frames, a, p1, p2)
+        :bottom -> Line.new(frames, a, p1, p2)
+      end
+      | create_lines(frames, [b | tail], type)
+    ]
   end
+
+  # def merge_length(frames, lines) do
+  # end
 
   @spec new([%Frame{}]) :: %TrendLines{}
   def new(frames) do
@@ -30,8 +48,8 @@ defmodule TrendLines do
     %TrendLines{
       top_anchors: top_anchors,
       bottom_anchors: bottom_anchors,
-      top_lines: create_lines(top_anchors, :top),
-      bottom_lines: create_lines(bottom_anchors, :bottom)
+      top_lines: create_lines(frames, top_anchors, :top),
+      bottom_lines: create_lines(frames, bottom_anchors, :bottom)
     }
   end
 end
