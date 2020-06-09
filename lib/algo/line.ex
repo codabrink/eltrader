@@ -12,7 +12,8 @@ defmodule Line do
     :geom,
     :slope,
     :b,
-    crosses: []
+    crosses: [],
+    source_frames: []
   ]
 
   def relevant_until(_, [], index), do: index
@@ -26,8 +27,8 @@ defmodule Line do
     end
   end
 
-  @spec new([%Frame{}], %Frame{}, %Geo.Point{}, %Geo.Point{}) :: %Line{}
-  def new(frames, frame, p1, p2) do
+  @spec new([%Frame{}], %Frame{}, %Geo.Point{}, %Geo.Point{}, [%Frame{}]) :: %Line{}
+  def new(frames, frame, p1, p2, source_frames) do
     angle = Topo.angle(p1, p2)
     p2 = Topo.translate(p1, 20000.0, angle)
     slope = calc_slope(p1, p2)
@@ -38,6 +39,7 @@ defmodule Line do
       p2: p2,
       slope: slope,
       b: calc_b(p1, slope),
+      source_frames: source_frames,
       geom: %Geo.LineString{coordinates: [p1.coordinates, p2.coordinates]},
       p1_index: frame.index
     }

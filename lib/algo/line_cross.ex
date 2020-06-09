@@ -9,24 +9,25 @@ defmodule Line.Cross do
 
   def crosses(line, [frame | tail], crosses) do
     dist = Topo.distance(frame.stem_geom, line.geom)
+    tolerance = frame.close * @break_min_distance
 
-    case dist do
-      0.0 -> collect_frames(line, tail, [frame], crosses)
-      _ -> crosses(line, tail, crosses)
+    cond do
+      frame in line.source_frames -> crosses(line, tail, crosses)
+      dist < tolerance -> collect_frames(line, tail, [frame], crosses)
+      true -> crosses(line, tail, crosses)
     end
   end
 
+  @spec collect_frames(%Line{}, [%Frame{}], [%Frame{}], [%Line.Cross{}]) :: [%Line.Cross{}]
   def collect_frames(line, [frame | tail], crossing_frames, crosses) do
     tolerance = frame.close * @break_min_distance
+    distance = Topo.distance(line.geom, frame.stem_geom)
 
-    case Topo.distance(line.geom, frame.stem_geom) do
-      0.0 ->
+    cond do
+      distance < tolerance ->
         collect_frames(line, tail, [frame | crossing_frames], crosses)
 
-      x when x < tolerance ->
-        collect_frames(line, tail, [frame | crossing_frames], crosses)
-
-      _ ->
+      true ->
         [_ | tail] = tail
 
         crosses(line, tail, [

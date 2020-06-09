@@ -1,10 +1,6 @@
 defmodule TrendLines do
   defstruct top_lines: [], bottom_lines: []
 
-  defmodule Payload do
-    defstruct [:frames]
-  end
-
   defp create_lines(_, [_], _), do: []
 
   defp create_lines(frames, [a, b | tail], type) do
@@ -19,8 +15,8 @@ defmodule TrendLines do
 
     [
       case type do
-        :top -> Line.new(frames, a, p1, p2)
-        :bottom -> Line.new(frames, a, p1, p2)
+        :top -> Line.new(frames, a, p1, p2, [a, b])
+        :bottom -> Line.new(frames, a, p1, p2, [a, b])
       end
       | create_lines(frames, [b | tail], type)
     ]
