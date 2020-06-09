@@ -4,14 +4,6 @@ defmodule Line.Cross do
   @type cross_type :: :up | :down | :bounce | :reject
   defstruct [:prev, :line, :did_break, :width, :frames, :open_point, :close_point]
 
-  defmodule Payload do
-    defstruct [
-      :crossing_frames,
-      :price_dist,
-      :frames
-    ]
-  end
-
   def crosses(line, frames), do: crosses(line, frames, [])
   def crosses(_, [], crosses), do: crosses
 
@@ -46,11 +38,5 @@ defmodule Line.Cross do
           | crosses
         ])
     end
-  end
-
-  def new(frames) do
-    %Line.Cross{
-      frames: frames
-    }
   end
 end

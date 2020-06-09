@@ -9,30 +9,35 @@ export default function TrendLineCrosses({ svg, data, x, candles }) {
   let crosses = []
   for (const line of topLines) crosses = crosses.concat(line.crosses)
   for (const line of bottomLines) crosses = crosses.concat(line.crosses)
-  console.log(crosses)
+  for (const cross of crosses) addXY(cross.open_point)
 
   let svgCrosses = svg
     .selectAll('.cross')
     .data(crosses)
     .enter()
-    .append('text')
+    .append('circle')
     .attr('class', 'cross')
-    .attr('x', (c) => x(c.open_point.coordinates[0]))
-    .attr('y', (c) => y(c.open_point.coordinates[1]))
-    .attr('dy', '.35em')
+    .attr('cx', (c) => x(c.open_point.x))
+    .attr('cy', (c) => y(c.open_point.y))
+    .attr('r', 3)
+    .attr('fill', 'white')
     .attr('stroke', 'black')
-    .text('x')
 
   function zoomed({ xz }) {
-    svgCrosses.attr('x', (c) => xz(c.open_point.coordinates[0]))
+    svgCrosses.attr('cx', (c) => xz(c.open_point.x))
   }
 
   function zoomend() {
     svgCrosses
       .transition()
       .duration(200)
-      .attr('y', (c) => y(c.open_point.coordinates[1]))
+      .attr('cy', (c) => y(c.open_point.y))
   }
 
   return { zoomed, zoomend }
+}
+
+function addXY(point) {
+  point.x = point.coordinates[0]
+  point.y = point.coordinates[1]
 }
