@@ -1,6 +1,3 @@
-import * as d3 from 'd3'
-import { project } from './util'
-import { group } from 'd3'
 const colors = ['red', 'black', 'green', 'orange', 'purple', 'cyan', 'blue', 'gray']
 
 function rnd(array) {
@@ -9,7 +6,6 @@ function rnd(array) {
 
 export default function TrendLines({ svg, data, x, candles }) {
   let {
-    frames,
     trend_lines: { top_lines: topLines, bottom_lines: bottomLines },
   } = data
 

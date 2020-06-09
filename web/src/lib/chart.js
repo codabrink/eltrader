@@ -2,6 +2,7 @@ import * as d3 from 'd3'
 import _ from 'lodash'
 import Candles from './candles'
 import TrendLines from './trend_lines'
+import TrendLineCrosses from './trend_line_crosses'
 
 // const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
@@ -68,6 +69,8 @@ export function drawChart(data) {
   indicators.push(candles)
   let trendLines = TrendLines({ svg: chartBody, data, candles, x })
   indicators.push(trendLines)
+  let trendLineCrosses = TrendLineCrosses({ svg: chartBody, data, candles, x })
+  indicators.push(trendLineCrosses)
 
   svg.append('defs').append('clipPath').attr('id', 'clip').append('rect').attr('width', w).attr('height', h)
 

@@ -1,5 +1,5 @@
 defmodule TrendLines do
-  defstruct top_anchors: [], bottom_anchors: [], top_lines: [], bottom_lines: []
+  defstruct top_lines: [], bottom_lines: []
 
   defmodule Payload do
     defstruct [:frames]
@@ -46,8 +46,8 @@ defmodule TrendLines do
       |> Enum.sort(fn f1, f2 -> f1.close_time <= f2.close_time end)
 
     %TrendLines{
-      top_anchors: top_anchors,
-      bottom_anchors: bottom_anchors,
+      # top_anchors: top_anchors,
+      # bottom_anchors: bottom_anchors,
       top_lines: create_lines(frames, top_anchors, :top),
       bottom_lines: create_lines(frames, bottom_anchors, :bottom)
     }
