@@ -6,6 +6,7 @@ defmodule Frame do
     :high,
     :low,
     :close,
+    :price_average,
     :volume,
     :asset_volume,
     :close_time,
@@ -25,11 +26,13 @@ defmodule Frame do
 
   def new(candle, prev, index) do
     frame = struct(Frame, Map.from_struct(candle))
+    price_average = (frame.open + frame.high + frame.low + frame.close) / 4.0
 
     %Frame{
       frame
       | prev: prev,
         index: index,
+        price_average: price_average,
         momentum: calculate_momentum(candle, prev, index),
         body_geom: %Geo.LineString{coordinates: [{index, frame.open}, {index, frame.close}]},
         stem_geom: %Geo.LineString{coordinates: [{index, frame.high}, {index, frame.low}]}

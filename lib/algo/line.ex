@@ -55,6 +55,13 @@ defmodule Line do
     }
   end
 
+  defp zip_price_diff([], _), do: []
+
+  defp zip_price_dff([frame | tail], line) do
+    diff = frame.close - y_at(line, frame.index)
+    [{frame, diff} | zip_price_diff(tail, line)]
+  end
+
   # Calculate slope
   defp calc_slope(%{coordinates: {x1, y1}}, %{coordinates: {x2, y2}}), do: (y2 - y1) / (x2 - x1)
   # Used in the slope formula

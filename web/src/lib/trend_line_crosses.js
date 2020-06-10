@@ -1,5 +1,7 @@
 import { cross } from 'd3'
 
+const arrowOffset = 0.2
+
 export default function TrendLineCrosses({ svg, data, x, candles }) {
   let {
     trend_lines: { top_lines: topLines, bottom_lines: bottomLines },
@@ -19,12 +21,23 @@ export default function TrendLineCrosses({ svg, data, x, candles }) {
     .attr('class', 'cross')
     .attr('cx', (c) => x(c.open_point.x))
     .attr('cy', (c) => y(c.open_point.y))
-    .attr('r', 3)
+    .attr('r', 4)
     .attr('fill', 'white')
     .attr('stroke', 'black')
 
+  let arrows = svg
+    .selectAll('.arrow')
+    .data(crosses)
+    .enter()
+    .append('text')
+    .attr('x', (c) => x(c.open_point.x + arrowOffset))
+    .attr('y', (c) => y(c.open_point.y))
+    .attr('dy', '0.35em')
+    .text((c) => (c.type === 'reject' || c.type === 'down' ? '↓' : '↑'))
+
   function zoomed({ xz }) {
     svgCrosses.attr('cx', (c) => xz(c.open_point.x))
+    arrows.attr('x', (c) => xz(c.open_point.x + arrowOffset))
   }
 
   function zoomend() {
@@ -32,6 +45,10 @@ export default function TrendLineCrosses({ svg, data, x, candles }) {
       .transition()
       .duration(200)
       .attr('cy', (c) => y(c.open_point.y))
+    arrows
+      .transition()
+      .duration(200)
+      .attr('y', (c) => y(c.open_point.y))
   }
 
   return { zoomed, zoomend }
