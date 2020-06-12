@@ -7,7 +7,8 @@ defmodule C do
             reversal_strength_distance_factor: 1,
             reversal_anchor_pct: 3,
             line_anchor_distance: 30,
-            trend_break_length: 5
+            trend_break_length: 5,
+            sim_slippage: 0.001
 
   def init(config \\ %C{}) do
     if :ets.whereis(:algo_config) === :undefined,

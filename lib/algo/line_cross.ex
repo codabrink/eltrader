@@ -1,6 +1,6 @@
 defmodule Line.Cross do
   # @cross_min_gap 1
-  # @break_min_distance 0.0001
+  @break_min_distance 0.0001
   @type cross_type :: :up | :down | :bounce | :reject
   defstruct [:prev, :line, :did_break, :width, :frames, :open_point, :close_point, :type]
 
@@ -9,8 +9,7 @@ defmodule Line.Cross do
 
   def crosses(line, [frame | tail], crosses) do
     dist = Topo.distance(line.geom, frame.stem_geom)
-    # frame.close * @break_min_distance
-    tolerance = 0.0
+    tolerance = frame.close * @break_min_distance
 
     cond do
       frame in line.source_frames -> crosses(line, tail, crosses)
@@ -22,8 +21,7 @@ defmodule Line.Cross do
   @spec collect_crossing_frames(%Line{}, [%Frame{}], [%Frame{}], [%Line.Cross{}]) ::
           [%Line.Cross{}]
   def collect_crossing_frames(line, [frame | tail], crossing_frames, crosses) do
-    # frame.close * @break_min_distance
-    tolerance = 0.0
+    tolerance = frame.close * @break_min_distance
     distance = Topo.distance(line.geom, frame.stem_geom)
 
     cond do

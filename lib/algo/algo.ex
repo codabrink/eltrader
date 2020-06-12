@@ -1,12 +1,14 @@
 defmodule Algo do
   defmodule Payload do
-    defstruct [:frames, :trend_lines]
+    defstruct [:frames, :trend_lines, :votes, :bias]
   end
 
-  def run() do
-    C.init()
+  def annotate(), do: annotate(ApiData.candles())
 
-    candles = ApiData.candles()
+  def run(candles), do: candles |> annotate() |> add_votes()
+
+  def annotate(candles) do
+    C.init()
 
     frames =
       to_frames(candles, 0, nil)
@@ -19,8 +21,28 @@ defmodule Algo do
     }
   end
 
-  def runn() do
-    run()
+  @spec add_votes(%Payload{}) :: %Payload{}
+  def add_votes(payload) do
+    votes = []
+    votes = Decision.TrendReclaim.run(payload) ++ votes
+
+    %{payload | votes: votes}
+  end
+
+  @spec sim() :: [%Payload{}]
+  def sim() do
+    reverse_candles = ApiData.candles() |> Enum.reverse()
+    sim(reverse_candles)
+  end
+
+  def sim([]), do: []
+
+  def sim([_ | tail]) do
+    [run(Enum.reverse(tail)) | sim(tail)]
+  end
+
+  def quiet() do
+    annotate()
     nil
   end
 
