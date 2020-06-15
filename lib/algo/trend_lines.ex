@@ -1,6 +1,7 @@
 defmodule TrendLines do
   defstruct top_lines: [], bottom_lines: []
 
+  defp create_lines(_, [], _), do: []
   defp create_lines(_, [_], _), do: []
 
   defp create_lines(frames, [a, b | tail], type) do

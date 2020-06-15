@@ -47,20 +47,22 @@ defmodule Line do
     p2_index = relevant_until(line, frames, 0)
     frames_after = Enum.take(frames, frame.index - length(frames))
 
+    crosses = Line.Cross.collect_crosses(line, frames_after)
+
     %Line{
       line
       | p2: Topo.x_translate(p1, p2_index - frame.index, angle),
         p2_index: p2_index,
-        crosses: Line.Cross.crosses(line, frames_after)
+        crosses: crosses
     }
   end
 
-  defp zip_price_diff([], _), do: []
-
-  defp zip_price_dff([frame | tail], line) do
-    diff = frame.close - y_at(line, frame.index)
-    [{frame, diff} | zip_price_diff(tail, line)]
-  end
+  # defp zip_price_diff([], _), do: []
+  #
+  # defp zip_price_dff([frame | tail], line) do
+  # diff = frame.close - y_at(line, frame.index)
+  # [{frame, diff} | zip_price_diff(tail, line)]
+  # end
 
   # Calculate slope
   defp calc_slope(%{coordinates: {x1, y1}}, %{coordinates: {x2, y2}}), do: (y2 - y1) / (x2 - x1)

@@ -10,7 +10,7 @@ defmodule Decision.TrendReclaim do
   @impl Decision.Behavior
   @spec run(%Algo.Payload{}) :: [%Vote{}]
   def run(%Algo.Payload{} = a) do
-    bias([a.trend_lines.bottom_lines]) ++ bias([a.trend_lines.top_lines])
+    bias(a.trend_lines.bottom_lines) ++ bias(a.trend_lines.top_lines)
   end
 
   @spec run_sum(%Algo.Payload{}) :: float
@@ -28,12 +28,14 @@ defmodule Decision.TrendReclaim do
     rejection_count = count_rejections(crosses)
 
     cond do
-      rejection_count > 2 -> IO.puts('UPPPP')
+      rejection_count > 2 -> IO.puts("UP #{rejection_count}")
+      true -> nil
     end
 
     [%Vote{source: Decision.TrendReclaim, bias: 1} | bias(tail)]
   end
 
+  @spec count_rejections([%Line.Cross{}]) :: number
   ## should doing percentage of rejections over time
   def count_rejections([]), do: 0
   def count_rejections([cross | tail]), do: count_rejections(cross.type, tail, 0)

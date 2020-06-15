@@ -32,13 +32,15 @@ defmodule Algo do
   @spec sim() :: [%Payload{}]
   def sim() do
     reverse_candles = ApiData.candles() |> Enum.reverse()
-    sim(reverse_candles)
+    _sim(reverse_candles)
+
+    nil
   end
 
-  def sim([]), do: []
+  defp _sim([]), do: []
 
-  def sim([_ | tail]) do
-    [run(Enum.reverse(tail)) | sim(tail)]
+  defp _sim([_ | tail]) do
+    [run(Enum.reverse(tail)) | _sim(tail)]
   end
 
   def quiet() do

@@ -21,8 +21,9 @@ defmodule Trader.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:plug_cowboy, "~> 2.2.1"},
+      {:plug_cowboy, "~> 2.3.0"},
       {:poison, "~> 4.0.1"},
+      {:jason, " ~> 1.2.1"},
       {:httpoison, "~> 1.6.2"},
       # {:topo, "0.4.0"},
       {:topo, git: "https://github.com/codabrink/topo.git"}

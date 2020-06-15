@@ -1,7 +1,7 @@
 defmodule Vote.Result do
   defstruct [:vote, :did_succeed]
 
-  @spec new(%Vote{}, %Algo.Annotation{}) :: %Vote.Result{}
+  # @spec new(%Vote{}, %Algo.Annotation{}) :: %Vote.Result{}
   def new(vote, %{frames: frames}) do
     diff = Enum.at(frames, vote.frame.index + 5) - vote.frame.close
 
