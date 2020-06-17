@@ -1,4 +1,5 @@
 defmodule Candle do
+  @derive Jason.Encoder
   defstruct [
     :open_time,
     :open,
