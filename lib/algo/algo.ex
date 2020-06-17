@@ -1,10 +1,18 @@
 defmodule Algo do
   defmodule Payload do
-    defstruct [:frames, :trend_lines, :votes, :bias]
+    use TypedStruct
+
+    typedstruct do
+      field :frames, [%Frame{}]
+      field :trend_lines, %TrendLines{}
+      field :votes, [%Vote{}]
+      field :bias, float()
+    end
   end
 
   def annotate(), do: annotate(ApiData.candles())
 
+  def run(), do: run(ApiData.candles())
   def run(candles), do: candles |> annotate() |> add_votes()
 
   def annotate(candles) do
@@ -29,18 +37,28 @@ defmodule Algo do
     %{payload | votes: votes}
   end
 
-  @spec sim() :: [%Payload{}]
-  def sim() do
-    reverse_candles = ApiData.candles() |> Enum.reverse()
-    _sim(reverse_candles)
-
+  def qsim() do
+    sim()
     nil
   end
 
-  defp _sim([]), do: []
+  @spec sim() :: [%Payload{}]
+  def sim() do
+    candles = ApiData.candles()
 
-  defp _sim([_ | tail]) do
-    [run(Enum.reverse(tail)) | _sim(tail)]
+    half_len = floor(length(candles) / 2)
+
+    head = Enum.take(candles, half_len)
+    tail = Enum.slice(candles, half_len, length(candles) - half_len)
+
+    _sim(head, tail)
+  end
+
+  defp _sim([], _), do: []
+  defp _sim(_, []), do: []
+
+  defp _sim([_ | head], [candle | tail]) do
+    [run(head) | _sim(head ++ [candle], tail)]
   end
 
   def quiet() do

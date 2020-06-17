@@ -67,7 +67,7 @@ defmodule Api.Endpoint do
   def render(conn) do
     case conn.path_info do
       ["prices"] ->
-        Algo.annotate()
+        Algo.run()
         |> Poison.encode!()
 
       _ ->
