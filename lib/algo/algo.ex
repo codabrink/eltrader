@@ -6,14 +6,15 @@ defmodule Algo do
       field :frames, [%Frame{}]
       field :trend_lines, %TrendLines{}
       field :votes, [%Vote{}]
-      field :bias, float()
     end
   end
 
-  def annotate(), do: annotate(ApiData.candles())
-
-  def run(), do: run(ApiData.candles())
+  def run(), do: run("BTCUSDT", "15m")
   def run(candles), do: candles |> annotate() |> add_votes()
+  def run(symbol, interval), do: run(ApiData.candles(symbol, interval))
+
+  def annotate(), do: annotate("BTCUSDT", "15m")
+  def annotate(symbol, interval), do: ApiData.candles(symbol, interval) |> annotate()
 
   def annotate(candles) do
     C.init()
@@ -42,9 +43,23 @@ defmodule Algo do
     nil
   end
 
+  def votes_for(symbol, interval, frame) do
+    sim_width_hours = C.fetch(:sim_width_hours)
+
+    end_time =
+      frame.open_time
+      |> DateTime.from_unix!(:millisecond)
+
+    start_time = end_time |> Timex.shift(hours: -sim_width_hours)
+
+    candles = ApiData.candles(symbol, interval, start_time, end_time)
+  end
+
   @spec sim() :: [%Payload{}]
-  def sim() do
-    candles = ApiData.candles()
+  def sim(), do: sim("BTCUSDT", "15m")
+
+  def sim(symbol, interval) do
+    candles = ApiData.candles(symbol, interval)
 
     half_len = floor(length(candles) / 2)
 

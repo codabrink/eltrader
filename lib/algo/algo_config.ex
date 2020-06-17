@@ -1,6 +1,7 @@
 defmodule C do
   # number of candles considered in cancluating momentum
-  defstruct momentum_width: 3,
+  defstruct sim_width_hours: 36,
+            momentum_width: 3,
             # distance from nearest peak needed to be considered a reversal
             reversal_distance: 2,
             reversal_strength_price_delta_factor: 1,

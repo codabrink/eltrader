@@ -27,25 +27,21 @@ defmodule Decision.TrendReclaim do
   def votes([line | lines], r_frames, votes) do
     [frame | _] = r_frames
     distance = frame.close - Line.y_at(line, frame.index)
+    rejection_count = count_rejections(Enum.reverse(line.crosses))
 
     cond do
       abs(distance) < @max_distance * frame.close ->
-        vote = vote(line, r_frames)
-        votes(lines, r_frames, [vote | votes])
+        votes(lines, r_frames, [new_vote(line, rejection_count) | votes])
 
       true ->
         votes(lines, r_frames, votes)
     end
   end
 
-  def vote(line, _) do
-    rejection_count = count_rejections(Enum.reverse(line.crosses))
+  def new_vote(_, rejection_count) when rejection_count > 2,
+    do: %Vote{source: Decision.TrendReclaim, bias: 1}
 
-    cond do
-      rejection_count > 2 -> %Vote{source: Decision.TrendReclaim, bias: 1}
-      true -> %Vote{source: Decision.TrendReclaim, bias: 0}
-    end
-  end
+  def new_vote(_, _), do: %Vote{source: Decision.TrendReclaim, bias: 0}
 
   @spec count_rejections([%Line.Cross{}]) :: number
   ## should doing percentage of rejections over time
