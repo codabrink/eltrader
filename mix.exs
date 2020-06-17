@@ -26,9 +26,8 @@ defmodule Trader.MixProject do
       {:httpoison, "~> 1.6.2"},
       {:timex, "~> 3.6.2"},
       {:typed_struct, "~> 0.2.0"},
-      # {:topo, "0.4.0"},
+      {:nebulex, "~> 1.2.2"},
       {:topo, git: "https://github.com/codabrink/topo.git"}
-      # {:dep_from_hexpm, "~> 0.3.0"},
     ]
   end
 end

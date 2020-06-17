@@ -5,7 +5,8 @@ defmodule Api do
         scheme: :http,
         plug: Api.Endpoint,
         options: [port: Application.get_env(:trader, :port)]
-      )
+      ),
+      Trader.Cache
     ]
 
     opts = [strategy: :one_for_one, name: Trader.Supervisor]

@@ -30,3 +30,53 @@ defmodule JasonEncoder do
     end
   end
 end
+
+defmodule Range.Helper do
+  def to_list(range, step \\ 1) do
+    first..last = range
+    _to_list([], first, last, step)
+  end
+
+  defp _to_list(acc, num, last, _) when num > last, do: Enum.reverse(acc)
+
+  defp _to_list(acc, num, last, step) do
+    _to_list([num | acc], num + step, last, step)
+  end
+
+  def diff(range, range) do
+  end
+end
+
+defmodule List.Helper do
+  def subtract(list, []), do: list
+
+  def subtract(list1, [list2 | lists]) do
+    subtract(list1 -- list2, lists)
+  end
+
+  def group_adjacent_fn([item | items], func), do: _group_adjacent_fn(items, [[item]], func)
+
+  defp _group_adjacent_fn([], [group | groups], _),
+    do: Enum.reverse([Enum.reverse(group) | groups])
+
+  defp _group_adjacent_fn([item | items], [group | groups], func) do
+    [last | _] = group
+
+    cond do
+      func.(item, last) -> _group_adjacent_fn(items, [[item | group] | groups], func)
+      true -> _group_adjacent_fn(items, [[item], Enum.reverse(group) | groups], func)
+    end
+  end
+
+  def group_adjacent([item | items], step \\ 1), do: _group_adjacent(items, [[item]], step)
+  defp _group_adjacent([], [group | groups], _), do: Enum.reverse([Enum.reverse(group) | groups])
+
+  defp _group_adjacent([item | items], [group | groups], step) do
+    [last | _] = group
+
+    cond do
+      item - last <= step -> _group_adjacent(items, [[item | group] | groups], step)
+      true -> _group_adjacent(items, [[item], Enum.reverse(group) | groups], step)
+    end
+  end
+end
