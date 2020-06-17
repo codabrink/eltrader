@@ -1,4 +1,7 @@
 defmodule Algo do
+  @default_symbol "BTCUSDT"
+  @default_interval "15m"
+
   defmodule Payload do
     use TypedStruct
 
@@ -9,11 +12,12 @@ defmodule Algo do
     end
   end
 
-  def run(), do: run("BTCUSDT", "15m")
-  def run(candles), do: candles |> annotate() |> add_votes()
-  def run(symbol, interval), do: run(ApiData.candles(symbol, interval))
+  def run(), do: run(@default_symbol, @default_interval)
 
-  def annotate(), do: annotate("BTCUSDT", "15m")
+  def run(candles), do: candles |> annotate() |> add_votes()
+  def run(symbol, interval), do: ApiData.candles(symbol, interval) |> run()
+
+  def annotate(), do: annotate(@default_symbol, @default_interval)
   def annotate(symbol, interval), do: ApiData.candles(symbol, interval) |> annotate()
 
   def annotate(candles) do
@@ -56,7 +60,7 @@ defmodule Algo do
   end
 
   @spec sim() :: [%Payload{}]
-  def sim(), do: sim("BTCUSDT", "15m")
+  def sim(), do: sim(@default_symbol, @default_interval)
 
   def sim(symbol, interval) do
     candles = ApiData.candles(symbol, interval)

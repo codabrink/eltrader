@@ -20,14 +20,16 @@ defmodule ApiData do
     File.close(file)
   end
 
-  def candles(symbol, interval, start_time \\ nil, end_time \\ nil) do
-    start_time =
-      start_time ||
-        DateTime.utc_now()
-        |> Timex.shift(days: -10)
+  @spec candles(String, String) :: [%Candle{}]
+  def candles(symbol, interval),
+    do: candles(symbol, interval, Timex.beginning_of_day(DateTime.utc_now()))
 
-    end_time = end_time || DateTime.utc_now()
+  @spec candles(String, String, any) :: [%Candle{}]
+  def candles(symbol, interval, end_time),
+    do: candles(symbol, interval, Timex.shift(end_time, days: -5), end_time)
 
+  @spec candles(String, String, any, any) :: [%Candle{}]
+  def candles(symbol, interval, start_time, end_time) do
     unless File.exists?(file_path(symbol, interval, start_time, end_time)),
       do: cache_api(symbol, interval, start_time, end_time)
 

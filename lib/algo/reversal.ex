@@ -31,11 +31,7 @@ defmodule Reversal do
     }
 
     [
-      %Frame{
-        frame
-        | top_reversal: top,
-          bottom_reversal: bottom
-      }
+      %{frame | top_reversal: top, bottom_reversal: bottom}
       | merge_reversals(tail, p)
     ]
   end
@@ -57,12 +53,10 @@ defmodule Reversal do
       diff: diff,
       strength: strength(type, frame, p.prev),
       constrained:
-        case type do
-          :top ->
-            if p.prev_top, do: p.prev_top.frame.high > frame.high, else: 0
-
-          :bottom ->
-            if p.prev_bottom, do: p.prev_bottom.frame.low < frame.low, else: 0
+        case {type, p} do
+          {:top, %{prev_top: %{frame: %{high: high}}}} -> high < frame.high
+          {:bottom, %{prev_bottom: %{frame: %{low: low}}}} -> low > frame.low
+          _ -> false
         end
     }
   end
