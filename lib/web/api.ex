@@ -68,7 +68,7 @@ defmodule Api.Endpoint do
     case conn.path_info do
       ["prices"] ->
         Algo.run()
-        |> Poison.encode!()
+        |> Jason.encode!()
 
       _ ->
         render_file(conn)

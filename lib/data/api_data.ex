@@ -34,13 +34,13 @@ defmodule ApiData do
       do: cache_api(symbol, interval, start_time, end_time)
 
     File.read!(file_path(symbol, interval, start_time, end_time))
-    |> Poison.Parser.parse!(%{keys: :atoms!})
+    |> Jason.decode!(%{keys: :atoms!})
     |> Enum.map(&Candle.new/1)
   end
 
   def candles_json(symbol, interval, start_time, end_time) do
     candles(symbol, interval, start_time, end_time)
-    |> Poison.encode!()
+    |> Jason.encode!()
   end
 
   def file_path(symbol, interval, start_time, end_time) do

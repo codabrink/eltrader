@@ -1,5 +1,5 @@
 defmodule Reversal do
-  @derive {Poison.Encoder, except: [:frame, :candle, :prev_top, :prev_bottom]}
+  @derive {Jason.Encoder, except: [:frame, :candle, :prev_top, :prev_bottom]}
   @type rev_type :: :top | :bottom
   defstruct [
     :type,

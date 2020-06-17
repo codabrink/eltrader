@@ -22,7 +22,6 @@ defmodule Trader.MixProject do
   defp deps do
     [
       {:plug_cowboy, "~> 2.3.0"},
-      {:poison, "~> 4.0.1"},
       {:jason, " ~> 1.2.1"},
       {:httpoison, "~> 1.6.2"},
       {:timex, "~> 3.6.2"},

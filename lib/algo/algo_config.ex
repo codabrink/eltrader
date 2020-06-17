@@ -36,7 +36,7 @@ defmodule C do
 
     json =
       config
-      |> Poison.encode!()
+      |> Jason.encode!()
 
     IO.binwrite(file, json)
     File.close(file)
@@ -47,6 +47,6 @@ defmodule C do
     unless File.exists?(path), do: save()
 
     File.read!(path)
-    |> Poison.decode!(as: %C{})
+    |> Jason.decode!(as: %C{})
   end
 end

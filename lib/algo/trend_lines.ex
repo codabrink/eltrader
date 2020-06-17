@@ -1,4 +1,5 @@
 defmodule TrendLines do
+  @derive Jason.Encoder
   defstruct top_lines: [], bottom_lines: []
 
   defp create_lines(_, [], _), do: []

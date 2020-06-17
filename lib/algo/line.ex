@@ -1,5 +1,5 @@
 defmodule Line do
-  @derive {Poison.Encoder, except: [:body_cross, :stem_cross]}
+  @derive {Jason.Encoder, except: [:body_cross, :stem_cross]}
   @type top_bottom :: :top | :bottom
   defstruct [
     :p1,

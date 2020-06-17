@@ -1,3 +1,5 @@
+require Protocol
+
 defmodule Util do
   def split_around(list, index) do
     {first, last} = Enum.split(list, index)
@@ -7,15 +9,18 @@ defmodule Util do
   end
 end
 
-defmodule PointEncoder do
-  alias Poison.Encoder
+Protocol.derive(Jason.Encoder, Geo.Point)
+Protocol.derive(Jason.Encoder, Geo.LineString)
 
-  defimpl Encoder, for: Geo.Point do
-    def encode(data, options) do
-      Geo.JSON.encode!(data)
-      |> Poison.encode!(options)
-    end
-  end
+defmodule JasonEncoder do
+  alias Jason.Encoder
+
+  # defimpl Encoder, for: Geo.Point do
+  #   def encode(data, options) do
+  #     Geo.JSON.encode!(data)
+  #     |> Jason.encode!(options)
+  #   end
+  # end
 
   defimpl Encoder, for: Tuple do
     def encode(data, options) when is_tuple(data) do

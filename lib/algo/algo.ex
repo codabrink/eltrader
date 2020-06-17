@@ -3,6 +3,7 @@ defmodule Algo do
   @default_interval "15m"
 
   defmodule Payload do
+    @derive Jason.Encoder
     use TypedStruct
 
     typedstruct do
@@ -59,10 +60,7 @@ defmodule Algo do
     candles = ApiData.candles(symbol, interval, start_time, end_time)
   end
 
-  @spec sim() :: [%Payload{}]
-  def sim(), do: sim(@default_symbol, @default_interval)
-
-  def sim(symbol, interval) do
+  def sim(symbol \\ @default_symbol, interval \\ @default_interval) do
     candles = ApiData.candles(symbol, interval)
 
     half_len = floor(length(candles) / 2)

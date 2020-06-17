@@ -1,4 +1,5 @@
 defmodule Line.Cross do
+  @derive Jason.Encoder
   # @cross_min_gap 1
   @break_min_distance 0.0001
   @type cross_type :: :up | :down | :bounce | :reject
