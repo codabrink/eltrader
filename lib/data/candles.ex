@@ -8,55 +8,63 @@ defmodule Candles do
     end
   end
 
-  def init_cache(symbol, interval) do
-    candles =
-      File.read!(file_path(symbol, interval))
-      |> Jason.decode!(%{keys: :atoms!})
-      |> Enum.map(&Candle.new/1)
-
-    step = get_step(interval)
-
-    candles =
-      List.Helper.group_adjacent_fn(candles, fn a, b -> b.open_time - a.open_time <= step end)
-
-    cache =
-      Enum.map(candles, fn group ->
-        %CandleGroup{
-          k: Range.new(List.first(group).open_time, List.last(group).open_time),
-          candles: group
-        }
-      end)
-
-    Trader.Cache.set(cache_key(symbol, interval), cache)
+  def cache(symbol, interval) do
+    read_cache_from_disk(symbol, interval)
+    Trader.Cache.get(cache_key(symbol, interval)) || []
   end
 
-  def save_cache(cache, symbol, interval) do
+  def read_cache_from_disk(symbol, interval) do
+    unless Trader.Cache.has_key?(cache_key(symbol, interval)),
+      do: _read_cache_from_disk(symbol, interval)
+  end
+
+  defp _read_cache_from_disk(symbol, interval) do
+    step = get_step(interval)
+
+    read_candles_from_disk(symbol, interval)
+    |> List.Helper.group_adjacent_fn(fn a, b -> b.open_time - a.open_time <= step end)
+    |> Enum.map(fn group ->
+      %CandleGroup{
+        k: Range.new(List.first(group).open_time, List.last(group).open_time),
+        candles: group
+      }
+    end)
+    |> (&Trader.Cache.set(cache_key(symbol, interval), &1)).()
+  end
+
+  def write_cache_to_disk(cache, symbol, interval),
+    do: Enum.map(cache, & &1.candles) |> write_candles_to_disk(symbol, interval)
+
+  def write_candles_to_disk(candles, symbol, interval) do
     {:ok, file} = File.open(file_path(symbol, interval), [:write])
-
-    cache
-    |> Enum.map(& &1.candles)
-    |> Jason.encode!()
-    |> (&IO.binwrite(file, &1)).()
-
+    candles |> Jason.encode!() |> (&IO.binwrite(file, &1)).()
     File.close(file)
+  end
+
+  def read_candles_from_disk(symbol, interval) do
+    File.read(file_path(symbol, interval))
+    |> (fn
+          {:ok, file} -> file |> Jason.decode!(%{keys: :atoms!}) |> Enum.map(&Candle.new/1)
+          _ -> []
+        end).()
   end
 
   def cache_candles(candles, symbol, interval) do
     range = Range.new(List.first(candles).open_time, List.last(candles).open_time)
 
-    cache = [
-      %CandleGroup{k: range, candles: candles}
-      | Trader.Cache.get(cache_key(symbol, interval)) || []
-    ]
+    cache = [%CandleGroup{k: range, candles: candles} | cache(symbol, interval)]
 
-    for g1 <- cache, g2 <- cache do
-      cond do
-        Range.disjoint?(g1.k, g2.k) -> [g1, g2]
-        true -> merge_groups(g1, g2)
+    cache =
+      for g1 <- cache, g2 <- cache do
+        cond do
+          Range.disjoint?(g1.k, g2.k) -> [g1, g2]
+          true -> merge_groups(g1, g2)
+        end
       end
-    end
-    |> List.flatten()
-    |> save_cache(symbol, interval)
+      |> List.flatten()
+
+    write_cache_to_disk(cache, symbol, interval)
+    Trader.Cache.set(cache_key(symbol, interval), cache)
   end
 
   def merge_groups(%{k: f1..l1, candles: c1}, %{k: f2..l2, candles: c2}),
@@ -84,28 +92,47 @@ defmodule Candles do
     |> Enum.map(&Candle.new/1)
   end
 
+  def candles(), do: candles("BTCUSDT", "15m")
+
   def candles(symbol, interval),
     do: candles(symbol, interval, Timex.beginning_of_day(DateTime.utc_now()))
 
   def candles(symbol, interval, end_time),
-    do: candles(symbol, interval, Timex.shift(end_time, days: -5), end_time)
+    do: candles(symbol, interval, Timex.shift(end_time, minutes: -15), end_time)
 
   def candles(symbol, interval, start_time, end_time) do
-    candle_ranges = Trader.Cache.get(cache_key(symbol, interval)) || []
+    cache = cache(symbol, interval)
     {start_ms, end_ms} = to_ms(start_time, end_time)
     step = get_step(interval)
     open_times = Range.Helper.to_list(start_ms..end_ms, step)
 
-    missing = List.Helper.subtract(open_times, Enum.map(candle_ranges, & &1.k))
+    missing = List.Helper.subtract(open_times, Enum.map(cache, &Range.Helper.to_list(&1.k)))
+    missing = List.Helper.group_adjacent(missing, step)
 
-    for group <- List.Helper.group_adjacent(missing, step) do
+    for group <- missing do
       start_ms = List.first(group)
       end_ms = List.last(group)
 
       download_candles(symbol, interval, start_ms, end_ms)
       |> cache_candles(symbol, interval)
     end
+
+    cache = Trader.Cache.get(cache_key(symbol, interval))
+
+    group =
+      Enum.find(cache, fn g ->
+        first..last = g.k
+        first <= start_ms && last >= end_ms
+      end)
+
+    Enum.slice(
+      group.candles,
+      index(List.first(group.candles).open_time, start_ms, step),
+      index(start_ms, end_ms, step)
+    )
   end
+
+  def index(start_ms, end_ms, step), do: floor((end_ms - start_ms) / step)
 
   def candles_json(symbol, interval, start_time, end_time) do
     candles(symbol, interval, start_time, end_time)

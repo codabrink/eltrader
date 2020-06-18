@@ -54,6 +54,7 @@ defmodule List.Helper do
     subtract(list1 -- list2, lists)
   end
 
+  def group_adjacent_fn([], _), do: []
   def group_adjacent_fn([item | items], func), do: _group_adjacent_fn(items, [[item]], func)
 
   defp _group_adjacent_fn([], [group | groups], _),
@@ -75,7 +76,7 @@ defmodule List.Helper do
     [last | _] = group
 
     cond do
-      item - last <= step -> _group_adjacent(items, [[item | group] | groups], step)
+      abs(item - last) <= step -> _group_adjacent(items, [[item | group] | groups], step)
       true -> _group_adjacent(items, [[item], Enum.reverse(group) | groups], step)
     end
   end

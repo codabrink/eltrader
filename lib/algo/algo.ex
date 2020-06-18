@@ -16,10 +16,10 @@ defmodule Algo do
   def run(), do: run(@default_symbol, @default_interval)
 
   def run(candles), do: candles |> annotate() |> add_votes()
-  def run(symbol, interval), do: ApiData.candles(symbol, interval) |> run()
+  def run(symbol, interval), do: Candles.candles(symbol, interval) |> run()
 
   def annotate(), do: annotate(@default_symbol, @default_interval)
-  def annotate(symbol, interval), do: ApiData.candles(symbol, interval) |> annotate()
+  def annotate(symbol, interval), do: Candles.candles(symbol, interval) |> annotate()
 
   def annotate(candles) do
     C.init()
@@ -57,11 +57,11 @@ defmodule Algo do
 
     start_time = end_time |> Timex.shift(hours: -sim_width_hours)
 
-    candles = ApiData.candles(symbol, interval, start_time, end_time)
+    candles = Candles.candles(symbol, interval, start_time, end_time)
   end
 
   def sim(symbol \\ @default_symbol, interval \\ @default_interval) do
-    candles = ApiData.candles(symbol, interval)
+    candles = Candles.candles(symbol, interval)
 
     half_len = floor(length(candles) / 2)
 
