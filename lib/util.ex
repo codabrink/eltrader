@@ -69,6 +69,7 @@ defmodule List.Helper do
     end
   end
 
+  def group_adjacent([], _), do: []
   def group_adjacent([item | items], step \\ 1), do: _group_adjacent(items, [[item]], step)
   defp _group_adjacent([], [group | groups], _), do: Enum.reverse([Enum.reverse(group) | groups])
 

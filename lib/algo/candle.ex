@@ -12,7 +12,10 @@ defmodule Candle do
     :asset_volume
   ]
 
+  def new(rc) when is_map(rc), do: struct(Frame, rc)
+
   def new(rc) do
+    IO.inspect(rc)
     open_time = Enum.at(rc, 0)
     open = String.to_float(Enum.at(rc, 1))
     high = String.to_float(Enum.at(rc, 2))

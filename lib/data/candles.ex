@@ -19,10 +19,7 @@ defmodule Candles do
   end
 
   defp _read_cache_from_disk(symbol, interval) do
-    step = get_step(interval)
-
     read_candles_from_disk(symbol, interval)
-    |> List.Helper.group_adjacent_fn(fn a, b -> b.open_time - a.open_time <= step end)
     |> Enum.map(fn group ->
       %CandleGroup{
         k: Range.new(List.first(group).open_time, List.last(group).open_time),
@@ -44,8 +41,13 @@ defmodule Candles do
   def read_candles_from_disk(symbol, interval) do
     File.read(file_path(symbol, interval))
     |> (fn
-          {:ok, file} -> file |> Jason.decode!(%{keys: :atoms!}) |> Enum.map(&Candle.new/1)
-          _ -> []
+          {:ok, file} ->
+            file
+            |> Jason.decode!(%{keys: :atoms!})
+            |> Enum.map(fn g -> Enum.map(g, &Candle.new/1) end)
+
+          _ ->
+            []
         end).()
   end
 
@@ -101,13 +103,18 @@ defmodule Candles do
     do: candles(symbol, interval, Timex.shift(end_time, minutes: -15), end_time)
 
   def candles(symbol, interval, start_time, end_time) do
+    Api.run()
+
     cache = cache(symbol, interval)
     {start_ms, end_ms} = to_ms(start_time, end_time)
     step = get_step(interval)
-    open_times = Range.Helper.to_list(start_ms..end_ms, step)
 
-    missing = List.Helper.subtract(open_times, Enum.map(cache, &Range.Helper.to_list(&1.k)))
-    missing = List.Helper.group_adjacent(missing, step)
+    desired_open_times = Range.Helper.to_list(start_ms..end_ms, step)
+    available_open_times = Enum.map(cache, &Range.Helper.to_list(&1.k, step))
+
+    missing =
+      List.Helper.subtract(desired_open_times, available_open_times)
+      |> List.Helper.group_adjacent(step)
 
     for group <- missing do
       start_ms = List.first(group)
@@ -117,7 +124,7 @@ defmodule Candles do
       |> cache_candles(symbol, interval)
     end
 
-    cache = Trader.Cache.get(cache_key(symbol, interval))
+    cache = cache(symbol, interval)
 
     group =
       Enum.find(cache, fn g ->
