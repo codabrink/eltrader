@@ -1,14 +1,35 @@
 defmodule Decision.TrendReclaim do
-  @behaviour Decision.Behavior
-
-  # percentage of price. If candle is further than this, ignore for line.
-  @max_distance 0.01
-
   @moduledoc """
   When a trend is broken and reclaimed, it's bullish.
   This module influences the bias positively when this is recognized.
   """
   defstruct [:start_frame, :end_frame, :width, :depth]
+
+  @behaviour Decision.Behavior
+  @behaviour Configurable
+  alias Trader.Cache
+
+  # percentage of price. If candle is further than this, ignore for line.
+  @config %{
+    influence: %R{
+      range: 0..1,
+      value: 1,
+      step: 0.1
+    },
+    max_distance: %R{
+      range: 0..5,
+      value: 0.01,
+      denominator: 100
+    }
+  }
+
+  @impl Configurable
+  def config(), do: __MODULE__ |> to_string |> Cache.config() || @config
+
+  def config(key) do
+    %{^key => %{:value => value}} = config()
+    value
+  end
 
   @impl Decision.Behavior
   @spec run(%Algo.Payload{}) :: [%Vote{}]
@@ -28,20 +49,21 @@ defmodule Decision.TrendReclaim do
     [frame | _] = r_frames
     distance = frame.close - Line.y_at(line, frame.index)
     rejection_count = count_rejections(Enum.reverse(line.crosses))
+    max_distance = config(:max_distance)
 
     cond do
-      abs(distance) < @max_distance * frame.close ->
-        votes(lines, r_frames, [new_vote(line, rejection_count) | votes])
+      abs(distance) < max_distance * frame.close ->
+        votes(lines, r_frames, [vote(line, rejection_count) | votes])
 
       true ->
         votes(lines, r_frames, votes)
     end
   end
 
-  def new_vote(_, rejection_count) when rejection_count > 2,
+  def vote(_, rejection_count) when rejection_count > 2,
     do: %Vote{source: Decision.TrendReclaim, bias: 1}
 
-  def new_vote(_, _), do: %Vote{source: Decision.TrendReclaim, bias: 0}
+  def vote(_, _), do: %Vote{source: Decision.TrendReclaim, bias: 0}
 
   @spec count_rejections([%Line.Cross{}]) :: number
   ## should doing percentage of rejections over time

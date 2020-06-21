@@ -26,3 +26,4 @@ trader-*.tar
 
 
 /cache/
+.DS_Store

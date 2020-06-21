@@ -1,5 +1,5 @@
 defmodule R do
-  defstruct [:range, :value]
+  defstruct [:range, :value, step: 1, denominator: 1]
 end
 
 defmodule Configurable do

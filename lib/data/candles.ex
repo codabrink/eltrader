@@ -117,7 +117,7 @@ defmodule Candles do
     do: candles(symbol, interval, Timex.beginning_of_day(DateTime.utc_now()))
 
   def candles(symbol, interval, end_time),
-    do: candles(symbol, interval, Timex.shift(end_time, days: -5), end_time)
+    do: candles(symbol, interval, Timex.shift(end_time, days: -14), end_time)
 
   def candles(symbol, interval, start_time, end_time) do
     cache = cache(symbol, interval)
