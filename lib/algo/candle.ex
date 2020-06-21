@@ -15,8 +15,6 @@ defmodule Candle do
   def new(rc) when is_map(rc), do: struct(Frame, rc)
 
   def new(rc) do
-    IO.inspect(rc)
-    open_time = Enum.at(rc, 0)
     open = String.to_float(Enum.at(rc, 1))
     high = String.to_float(Enum.at(rc, 2))
     low = String.to_float(Enum.at(rc, 3))
@@ -25,7 +23,7 @@ defmodule Candle do
     # Consider making geom a square
 
     %Frame{
-      open_time: open_time,
+      open_time: Enum.at(rc, 0),
       open: open,
       high: high,
       low: low,

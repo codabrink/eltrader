@@ -1,6 +1,26 @@
 require Protocol
 
 defmodule Util do
+  def to_ms([]), do: []
+  def to_ms([a | t]), do: [to_ms(a) | to_ms(t)]
+  def to_ms(%DateTime{} = interval), do: DateTime.to_unix(interval, :millisecond)
+
+  def to_ms(interval) when is_bitstring(interval),
+    do: _to_ms(Regex.run(~r{(\d+)([a-zA-Z])}, interval))
+
+  defp _to_ms([_, n, u]) do
+    case [String.to_integer(n), u] do
+      [n, "m"] -> Timex.Duration.from_minutes(n)
+      [n, "h"] -> Timex.Duration.from_hours(n)
+      [n, "d"] -> Timex.Duration.from_days(n)
+      [n, "w"] -> Timex.Duration.from_weeks(n)
+      _ -> Timex.Duration.from_days(1)
+    end
+    |> Timex.Duration.to_milliseconds()
+  end
+
+  defp _to_ms(_), do: nil
+
   def split_around(list, index) do
     {first, last} = Enum.split(list, index)
     first = Enum.reverse(first)

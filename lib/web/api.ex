@@ -1,5 +1,8 @@
 defmodule Api do
-  def run() do
+  use Application
+
+  @impl true
+  def start(_type, _args) do
     children = [
       Plug.Cowboy.child_spec(
         scheme: :http,

@@ -1,0 +1,2 @@
+defmodule CandleCache do
+end

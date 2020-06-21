@@ -14,7 +14,8 @@ defmodule Trader.MixProject do
   # Run "mix help compile.app" to learn about applications.
   def application do
     [
-      extra_applications: [:logger, :plug_cowboy]
+      extra_applications: [:logger, :plug_cowboy],
+      mod: {Api, []}
     ]
   end
 
@@ -27,6 +28,7 @@ defmodule Trader.MixProject do
       {:timex, "~> 3.6.2"},
       {:typed_struct, "~> 0.2.0"},
       {:nebulex, "~> 1.2.2"},
+      {:websockex, "~> 0.4.2"},
       {:topo, git: "https://github.com/codabrink/topo.git"}
     ]
   end
