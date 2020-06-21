@@ -43,11 +43,6 @@ defmodule Algo do
     %{payload | votes: votes}
   end
 
-  def qsim() do
-    sim()
-    nil
-  end
-
   def votes_for(symbol, interval, frame) do
     sim_width_hours = C.fetch(:sim_width_hours)
 
@@ -57,25 +52,7 @@ defmodule Algo do
 
     start_time = end_time |> Timex.shift(hours: -sim_width_hours)
 
-    candles = Candles.candles(symbol, interval, start_time, end_time)
-  end
-
-  def sim(symbol \\ @default_symbol, interval \\ @default_interval) do
-    candles = Candles.candles(symbol, interval)
-
-    half_len = floor(length(candles) / 2)
-
-    head = Enum.take(candles, half_len)
-    tail = Enum.slice(candles, half_len, length(candles) - half_len)
-
-    _sim(head, tail)
-  end
-
-  defp _sim([], _), do: []
-  defp _sim(_, []), do: []
-
-  defp _sim([_ | head], [candle | tail]) do
-    [run(head) | _sim(head ++ [candle], tail)]
+    Candles.candles(symbol, interval, start_time, end_time)
   end
 
   def quiet() do
