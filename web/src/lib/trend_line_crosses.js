@@ -5,7 +5,7 @@ const arrowOffset = 0.2
 export default function TrendLineCrosses({ svg, data, x, candles }) {
   let {
     trend_lines: { top_lines: topLines, bottom_lines: bottomLines },
-  } = data
+  } = data.frames[data.frames.length - 1]
 
   let y = candles.getY()
   let crosses = []

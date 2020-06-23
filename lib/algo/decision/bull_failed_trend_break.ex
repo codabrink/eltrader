@@ -32,10 +32,10 @@ defmodule Decision.TrendReclaim do
   end
 
   @impl Decision.Behavior
-  @spec run(%Algo.Payload{}) :: [%Vote{}]
-  def run(%Algo.Payload{} = a) do
-    lines = a.trend_lines.top_lines ++ a.trend_lines.bottom_lines
-    votes(lines, Enum.reverse(a.frames), [])
+  @spec run(%Frame{}) :: [%Vote{}]
+  def run(%Frame{} = frame) do
+    lines = frame.trend_lines.top_lines ++ frame.trend_lines.bottom_lines
+    votes(lines, Enum.reverse(frame.frames), [])
   end
 
   @doc """

@@ -8,14 +8,12 @@ defmodule Algo do
 
     typedstruct do
       field :frames, [%Frame{}]
-      field :trend_lines, %TrendLines{}
-      field :votes, [%Vote{}]
     end
   end
 
   def run(), do: run(@default_symbol, @default_interval)
 
-  def run(candles), do: candles |> annotate() |> add_votes()
+  def run(candles), do: candles |> annotate()
   def run(symbol, interval), do: Candles.candles(symbol, interval) |> run()
 
   def annotate(), do: annotate(@default_symbol, @default_interval)
@@ -28,19 +26,12 @@ defmodule Algo do
       to_frames(candles, 0, nil)
       |> Frame.merge_dominion()
       |> Reversal.merge_reversals()
+      |> Frame.zip_frames()
+      |> Frame.complete()
 
     %Payload{
-      frames: frames,
-      trend_lines: TrendLines.new(frames)
+      frames: frames
     }
-  end
-
-  @spec add_votes(%Payload{}) :: %Payload{}
-  def add_votes(payload) do
-    votes = []
-    votes = Decision.TrendReclaim.run(payload) ++ votes
-
-    %{payload | votes: votes}
   end
 
   def votes_for(symbol, interval, frame) do
@@ -62,14 +53,18 @@ defmodule Algo do
 
   defp to_frames([], _, _), do: []
 
-  defp to_frames([candle | tail], i, prev) do
+  defp to_frames([frame | tail], i, prev) do
     frame =
       Frame.new(
-        candle,
+        frame,
         prev,
-        i
+        i,
+        nil
       )
 
-    [frame | to_frames(tail, i + 1, frame)]
+    [
+      frame
+      | to_frames(tail, i + 1, frame)
+    ]
   end
 end

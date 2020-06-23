@@ -7,7 +7,7 @@ function rnd(array) {
 export default function TrendLines({ svg, data, x, candles }) {
   let {
     trend_lines: { top_lines: topLines, bottom_lines: bottomLines },
-  } = data
+  } = data.frames[data.frames.length - 1]
 
   for (const line of topLines) addPoints(line)
   for (const line of bottomLines) addPoints(line)

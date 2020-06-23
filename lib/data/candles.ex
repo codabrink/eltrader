@@ -53,28 +53,29 @@ defmodule Candles do
 
   def cache_candles(candles, symbol, interval) do
     range = Range.new(List.first(candles).open_time, List.last(candles).open_time)
+    step = Util.to_ms(interval)
 
     cache =
       [%CandleGroup{k: range, candles: candles} | cache(symbol, interval)]
-      |> compile()
+      |> compile(step)
 
     write_cache_to_disk(cache, symbol, interval)
     Trader.Cache.set(cache_key(symbol, interval), cache)
   end
 
-  def compile([u | unbuilt]), do: compile(unbuilt, [u])
-  def compile([], built), do: built
+  def compile([u | unbuilt], step), do: compile(unbuilt, [u], step)
+  def compile([], built, _), do: built
 
-  def compile([u | unbuilt], built) do
-    compile(unbuilt, _compile(u, built))
+  def compile([u | unbuilt], built, step) do
+    compile(unbuilt, _compile(u, built, step), step)
   end
 
-  defp _compile(u, []), do: [u]
+  defp _compile(u, [], _), do: [u]
 
-  defp _compile(u, [b | built]) do
+  defp _compile(u, [b | built], step) do
     cond do
-      Range.disjoint?(u.k, b.k) -> [b | _compile(u, built)]
-      true -> _compile(merge_groups(u, b), built)
+      Range.Helper.adjacent?(u.k, b.k, step) -> [b | _compile(u, built, step)]
+      true -> _compile(merge_groups(u, b), built, step)
     end
   end
 
@@ -117,8 +118,9 @@ defmodule Candles do
     do: candles(symbol, interval, Timex.beginning_of_day(DateTime.utc_now()))
 
   def candles(symbol, interval, end_time),
-    do: candles(symbol, interval, Timex.shift(end_time, days: -14), end_time)
+    do: candles(symbol, interval, Timex.shift(end_time, days: -5), end_time)
 
+  @spec candles(String.t(), String.t(), any, any) :: [%Frame{}]
   def candles(symbol, interval, start_time, end_time) do
     cache = cache(symbol, interval)
     [start_ms, end_ms] = Util.to_ms([start_time, end_time])
@@ -147,11 +149,17 @@ defmodule Candles do
         first <= start_ms && last >= end_ms
       end)
 
-    Enum.slice(
-      group.candles,
-      index(List.first(group.candles).open_time, start_ms, step),
-      index(start_ms, end_ms, step)
-    )
+    case group do
+      %{candles: candles} ->
+        Enum.slice(
+          candles,
+          index(List.first(candles).open_time, start_ms, step),
+          index(start_ms, end_ms, step)
+        )
+
+      _ ->
+        []
+    end
   end
 
   def index(start_ms, end_ms, step), do: floor((end_ms - start_ms) / step)

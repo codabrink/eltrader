@@ -1,5 +1,5 @@
 defmodule Frame do
-  @derive {Jason.Encoder, except: [:prev, :body_geom, :stem_geom]}
+  @derive {Jason.Encoder, except: [:prev, :body_geom, :stem_geom, :frames]}
   defstruct [
     :open_time,
     :open,
@@ -21,11 +21,14 @@ defmodule Frame do
     :wick,
     :anchors,
     :bottom_dominion,
-    :top_dominion
+    :top_dominion,
+    :stake,
+    :trend_lines,
+    :votes,
+    frames: []
   ]
 
-  def new(candle, prev, index) do
-    frame = struct(Frame, Map.from_struct(candle))
+  def new(frame, prev, index, _opts) do
     price_average = (frame.open + frame.high + frame.low + frame.close) / 4.0
 
     %Frame{
@@ -33,10 +36,54 @@ defmodule Frame do
       | prev: prev,
         index: index,
         price_average: price_average,
-        momentum: calculate_momentum(candle, prev, index),
+        momentum: calculate_momentum(frame, prev, index),
         body_geom: %Geo.LineString{coordinates: [{index, frame.open}, {index, frame.close}]},
         stem_geom: %Geo.LineString{coordinates: [{index, frame.high}, {index, frame.low}]}
     }
+  end
+
+  def zip_frames(frames), do: zip_frames(frames, nil)
+
+  def zip_frames([], _), do: []
+
+  def zip_frames([frame | frames], prev) do
+    frame = %{
+      frame
+      | prev: prev,
+        frames:
+          case prev do
+            %{frames: frames} ->
+              frames ++ [frame]
+
+            _ ->
+              [frame]
+          end
+    }
+
+    [frame | zip_frames(frames, frame)]
+  end
+
+  def complete([]), do: []
+  def complete([frame]), do: [complete(frame)]
+  def complete([frame | frames]), do: [frame | complete(frames)]
+
+  def complete(frame) do
+    frame
+    |> add_trend_lines()
+    |> add_votes()
+  end
+
+  def add_trend_lines(frame) do
+    %{frame | trend_lines: TrendLines.new(frame.frames)}
+  end
+
+  @spec add_votes(%Frame{}) :: %Frame{}
+  def add_votes(frame) do
+    votes =
+      [Decision.TrendReclaim, Decision.TrendBreak]
+      |> Enum.reduce([], fn d, acc -> acc ++ apply(d, :run, [frame]) end)
+
+    %{frame | votes: votes}
   end
 
   def calculate_momentum(candle, prev, index) do

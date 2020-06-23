@@ -5,8 +5,7 @@ defmodule Simulator do
   @config %{
     hours: %R{
       range: 36..128,
-      value: 36,
-      step: 1
+      value: 36
     }
   }
 

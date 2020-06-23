@@ -35,13 +35,6 @@ Protocol.derive(Jason.Encoder, Geo.LineString)
 defmodule JasonEncoder do
   alias Jason.Encoder
 
-  # defimpl Encoder, for: Geo.Point do
-  #   def encode(data, options) do
-  #     Geo.JSON.encode!(data)
-  #     |> Jason.encode!(options)
-  #   end
-  # end
-
   defimpl Encoder, for: Tuple do
     def encode(data, options) when is_tuple(data) do
       data
@@ -63,7 +56,10 @@ defmodule Range.Helper do
     _to_list([num | acc], num + step, last, step)
   end
 
-  def diff(range, range) do
+  def adjacent?(a..b, c..d, step) do
+    c in a..b || d in a..b ||
+      abs(d - a) <= step || abs(c - b) <= step ||
+      abs(c - a) <= step || abs(d - b) <= step
   end
 end
 

@@ -1,3 +1,3 @@
 defmodule Decision.Behavior do
-  @callback run(%Algo.Payload{}) :: [%Vote{}]
+  @callback run(%Frame{}) :: [%Vote{}]
 end
