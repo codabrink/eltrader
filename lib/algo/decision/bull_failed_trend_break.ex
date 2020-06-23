@@ -60,8 +60,9 @@ defmodule Decision.TrendReclaim do
     end
   end
 
-  def vote(_, rejection_count) when rejection_count > 2,
-    do: %Vote{source: Decision.TrendReclaim, bias: 1}
+  def vote(_, rejection_count) when rejection_count > 2 do
+    %Vote{source: Decision.TrendReclaim, bias: 1}
+  end
 
   def vote(_, _), do: %Vote{source: Decision.TrendReclaim, bias: 0}
 
@@ -71,6 +72,9 @@ defmodule Decision.TrendReclaim do
   def count_rejections([cross | tail]), do: count_rejections(cross.type, tail, 0)
 
   def count_rejections(:reject, [cross | tail], count),
+    do: count_rejections(cross.type, tail, count + 1)
+
+  def count_rejections(:bounce, [cross | tail], count),
     do: count_rejections(cross.type, tail, count + 1)
 
   def count_rejections(_, _, count), do: count

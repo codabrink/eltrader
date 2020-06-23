@@ -78,7 +78,7 @@ defmodule Frame do
   @spec add_votes(%Frame{}) :: %Frame{}
   def add_votes(frame) do
     votes =
-      [Decision.TrendReclaim, Decision.TrendBreak]
+      [Decision.TrendReclaim]
       |> Enum.reduce([], fn d, acc -> acc ++ apply(d, :run, [frame]) end)
 
     %{frame | votes: votes}

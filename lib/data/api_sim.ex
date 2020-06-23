@@ -26,13 +26,13 @@ defmodule Api.Sim do
   end
 
   @spec buy(%Stake{}, %Frame{}) :: %Stake{}
-  def buy(p, frame) do
+  def buy(s, frame) do
     slippage = config(:slippage) + 1
     fee = 1 - config(:fee)
 
-    asset = p.asset + p.fiat / (frame.close * slippage) * fee
+    asset = s.asset + s.fiat / (frame.close * slippage) * fee
 
-    %{p | fiat: 0, asset: asset}
+    %{s | fiat: 0, asset: asset}
   end
 
   @spec sell(%Stake{}, %Frame{}) :: %Stake{}
