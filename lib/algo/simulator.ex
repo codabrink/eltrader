@@ -20,23 +20,24 @@ defmodule Simulator do
   def run(symbol \\ "BTCUSDT", interval \\ "15m")
       when is_bitstring(symbol) and is_bitstring(interval) do
     hours = config(:hours)
-    start_time = DateTime.utc_now() |> Timex.shift(days: -(hours * 2))
+    start_time = DateTime.utc_now() |> Timex.shift(hours: -(hours * 2))
     end_time = DateTime.utc_now()
-    step = Util.to_ms(interval)
+    # step = Util.to_ms(interval)
 
-    candles = Candles.candles(symbol, interval, start_time, end_time)
-    half_index = floor(length(candles) / 2)
+    frames = Candles.candles(symbol, interval, start_time, end_time)
 
-    head = Enum.take(candles, half_index)
-    tail = Enum.slice(candles, half_index, length(candles) - half_index)
-    sim(head, tail, 1, half_index)
+    [frame | frames] = frames
+    sim([frame], frames, 0)
   end
 
-  def sim([], _, _, _), do: []
-  def sim(_, [], _, _), do: []
+  def sim(frames) do
+    Algo.run(frames)
+  end
 
-  def sim([_ | head], [candle | tail], index, length) do
-    IO.puts("Simulating #{index} of #{length}...")
-    [Algo.run(head) | sim(head ++ [candle], tail, index + 1, length)]
+  def sim(_, [], _), do: []
+
+  def sim(frames, [frame | tail], index) do
+    IO.puts("Simulating frame #{index}...")
+    [sim(frames), sim(frames ++ [frame], tail, index + 1)]
   end
 end

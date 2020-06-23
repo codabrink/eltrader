@@ -13,20 +13,20 @@ defmodule Algo do
 
   def run(), do: run(@default_symbol, @default_interval)
 
-  def run(candles), do: candles |> annotate()
+  def run(frames), do: frames |> annotate()
   def run(symbol, interval), do: Candles.candles(symbol, interval) |> run()
 
   def annotate(), do: annotate(@default_symbol, @default_interval)
   def annotate(symbol, interval), do: Candles.candles(symbol, interval) |> annotate()
 
-  def annotate(candles) do
+  def annotate(frames) do
     C.init()
 
     frames =
-      to_frames(candles, 0, nil)
+      to_frames(frames, 0, nil)
       |> Frame.merge_dominion()
       |> Reversal.merge_reversals()
-      |> Frame.zip_frames()
+      |> Frame.zip_frames(nil)
       |> Frame.complete()
 
     %Payload{

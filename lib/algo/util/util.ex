@@ -3,7 +3,9 @@ require Protocol
 defmodule Util do
   def to_ms([]), do: []
   def to_ms([a | t]), do: [to_ms(a) | to_ms(t)]
-  def to_ms(%DateTime{} = interval), do: DateTime.to_unix(interval, :millisecond)
+
+  def to_ms(%DateTime{} = interval),
+    do: DateTime.to_unix(interval, :millisecond) |> round()
 
   def to_ms(interval) when is_bitstring(interval),
     do: _to_ms(Regex.run(~r{(\d+)([a-zA-Z])}, interval))
@@ -17,6 +19,7 @@ defmodule Util do
       _ -> Timex.Duration.from_days(1)
     end
     |> Timex.Duration.to_milliseconds()
+    |> round()
   end
 
   defp _to_ms(_), do: nil
@@ -50,10 +53,24 @@ defmodule Range.Helper do
     _to_list([], first, last, step)
   end
 
-  defp _to_list(acc, num, last, _) when num > last, do: Enum.reverse(acc)
+  defp _to_list(acc, num, last, _) when num >= last, do: Enum.reverse([last | acc])
 
   defp _to_list(acc, num, last, step) do
     _to_list([num | acc], num + step, last, step)
+  end
+
+  def subtract(a, []), do: [a]
+  def subtract(a, [b]), do: subtract(a, b)
+  def subtract(a, [b | tail]), do: subtract(subtract(a, b), subtract(a, tail))
+
+  def subtract(a..b, c..d) do
+    cond do
+      a in c..d and b in c..d -> []
+      c in a..b and d in a..b -> [a..c, b..d]
+      a in c..d -> [d..b]
+      b in c..d -> [a..c]
+      true -> a..b
+    end
   end
 
   def adjacent?(a..b, c..d, step) do

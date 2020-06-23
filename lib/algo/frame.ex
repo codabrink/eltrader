@@ -42,8 +42,6 @@ defmodule Frame do
     }
   end
 
-  def zip_frames(frames), do: zip_frames(frames, nil)
-
   def zip_frames([], _), do: []
 
   def zip_frames([frame | frames], prev) do

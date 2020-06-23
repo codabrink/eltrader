@@ -51,13 +51,21 @@ defmodule Candles do
         end).()
   end
 
-  def cache_candles(candles, symbol, interval) do
-    range = Range.new(List.first(candles).open_time, List.last(candles).open_time)
+  def cache_candles(frames, symbol, interval) do
     step = Util.to_ms(interval)
 
     cache =
-      [%CandleGroup{k: range, candles: candles} | cache(symbol, interval)]
-      |> compile(step)
+      cache(symbol, interval)
+      |> Enum.reduce(frames, fn g, acc -> acc ++ g.candles end)
+      |> Enum.uniq_by(& &1.open_time)
+      |> Enum.sort_by(& &1.open_time)
+      |> List.Helper.group_adjacent_fn(&(abs(&1.open_time - &2.open_time) >= step))
+      |> Enum.map(fn g ->
+        %CandleGroup{
+          k: Range.new(List.first(g).open_time, List.last(g).open_time),
+          candles: g
+        }
+      end)
 
     write_cache_to_disk(cache, symbol, interval)
     Trader.Cache.set(cache_key(symbol, interval), cache)
@@ -82,7 +90,7 @@ defmodule Candles do
   def merge_groups(%{k: f1..l1, candles: c1}, %{k: f2..l2, candles: c2}),
     do: %CandleGroup{
       k: Range.new(min(f1, f2), max(l1, l2)),
-      candles: (c1 ++ c2) |> Enum.uniq_by(& &1.open_time) |> Enum.sort_by(& &1.open_time)
+      candles: c1 ++ c2
     }
 
   @spec download_candles(String.t(), String.t(), number(), number()) :: [%Frame{}]
@@ -126,30 +134,25 @@ defmodule Candles do
     [start_ms, end_ms] = Util.to_ms([start_time, end_time])
     step = Util.to_ms(interval)
 
-    desired_open_times = Range.Helper.to_list(start_ms..end_ms, step)
-    available_open_times = Enum.map(cache, &Range.Helper.to_list(&1.k, step))
+    available = Enum.map(cache, & &1.k)
 
     missing =
-      List.Helper.subtract(desired_open_times, available_open_times)
-      |> List.Helper.group_adjacent(step)
+      Range.Helper.subtract(start_ms..end_ms, available)
+      |> List.flatten()
+      |> Enum.filter(fn a..b -> abs(a - b) >= step end)
 
-    for group <- missing do
-      start_ms = List.first(group)
-      end_ms = List.last(group)
+    for range <- missing do
+      start_ms..end_ms = range
 
       download_candles(symbol, interval, start_ms, end_ms)
       |> cache_candles(symbol, interval)
     end
 
-    cache = cache(symbol, interval)
-
-    group =
-      Enum.find(cache, fn g ->
-        first..last = g.k
-        first <= start_ms && last >= end_ms
-      end)
-
-    case group do
+    cache(symbol, interval)
+    |> Enum.find(fn g ->
+      Range.Helper.adjacent?(start_ms..end_ms, g.k, step)
+    end)
+    |> case do
       %{candles: candles} ->
         Enum.slice(
           candles,
