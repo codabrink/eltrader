@@ -16,17 +16,34 @@ defmodule Frame do
     :index,
     :momentum,
     :prev,
-    :top_reversal,
-    :bottom_reversal,
-    :wick,
-    :anchors,
     :bottom_dominion,
     :top_dominion,
     :stake,
     :trend_lines,
     :votes,
-    frames: []
+    frames: [],
+    strong_points: [],
+    bottom_strong_points: [],
+    top_strong_points: []
   ]
+
+  @behaviour Configurable
+  alias Trader.Cache
+
+  @config %{
+    frame_width: %R{
+      range: 100..300,
+      value: 100
+    }
+  }
+
+  @impl Configurable
+  def config(), do: __MODULE__ |> to_string |> Cache.config() || @config
+
+  def config(key) do
+    %{^key => %{:value => value}} = config()
+    value
+  end
 
   def new(frame, prev, index, _opts) do
     price_average = (frame.open + frame.high + frame.low + frame.close) / 4.0
@@ -45,6 +62,8 @@ defmodule Frame do
   def zip_frames([], _), do: []
 
   def zip_frames([frame | frames], prev) do
+    frame_width = config(:frame_width)
+
     frame = %{
       frame
       | prev: prev,
@@ -67,8 +86,14 @@ defmodule Frame do
 
   def complete(frame) do
     frame
+    |> generate_strong_points()
     |> add_trend_lines()
     |> add_votes()
+  end
+
+  def generate_strong_points(frame) do
+    [all, top, bottom] = StrongPoint.generate(frame.frames)
+    %{frame | strong_points: all, bottom_strong_points: bottom, top_strong_points: top}
   end
 
   def add_trend_lines(frame) do

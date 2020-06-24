@@ -1,6 +1,6 @@
 defmodule Algo do
   @default_symbol "BTCUSDT"
-  @default_interval "15m"
+  @default_interval "1h"
 
   defmodule Payload do
     @derive Jason.Encoder
@@ -25,7 +25,7 @@ defmodule Algo do
     frames =
       to_frames(frames, 0, nil)
       |> Frame.merge_dominion()
-      |> Reversal.merge_reversals()
+      # |> Reversal.merge_reversals()
       |> Frame.zip_frames(nil)
       |> Frame.complete()
 

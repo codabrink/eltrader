@@ -30,7 +30,7 @@ defmodule Simulator do
     simulation = annotate([frame], frames, 0)
     simulation = Enum.take(simulation, -floor(length(simulation) / 2))
 
-    IO.puts("Running purchases..")
+    IO.puts("Running purchases...")
     stake = Api.Sim.new(9_000)
     frames = sim(simulation, stake)
 

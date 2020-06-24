@@ -120,13 +120,13 @@ defmodule Candles do
     end
   end
 
-  def candles(), do: candles("BTCUSDT", "15m")
+  def candles(), do: candles("BTCUSDT", "1h")
 
   def candles(symbol, interval),
     do: candles(symbol, interval, Timex.beginning_of_day(DateTime.utc_now()))
 
   def candles(symbol, interval, end_time),
-    do: candles(symbol, interval, Timex.shift(end_time, days: -5), end_time)
+    do: candles(symbol, interval, Timex.shift(end_time, days: -20), end_time)
 
   @spec candles(String.t(), String.t(), any, any) :: [%Frame{}]
   def candles(symbol, interval, start_time, end_time) do
