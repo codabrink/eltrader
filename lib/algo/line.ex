@@ -27,11 +27,13 @@ defmodule Line do
     end
   end
 
-  @spec new([%Frame{}], %Frame{}, %Geo.Point{}, %Geo.Point{}, [%Frame{}]) :: %Line{}
-  def new(frames, frame, p1, p2, source_frames) do
+  @spec new([%Frame{}], %Geo.Point{}, %Geo.Point{}, [%Frame{}]) :: %Line{}
+  def new(frames, p1, p2, source_frames) do
     angle = Topo.angle(p1, p2)
     p2 = Topo.translate(p1, 20000.0, angle)
     slope = calc_slope(p1, p2)
+
+    %{coordinates: {p1_index, _}} = p1
 
     line = %Line{
       angle: angle,
@@ -41,17 +43,17 @@ defmodule Line do
       b: calc_b(p1, slope),
       source_frames: source_frames,
       geom: %Geo.LineString{coordinates: [p1.coordinates, p2.coordinates]},
-      p1_index: frame.index
+      p1_index: p1_index
     }
 
     p2_index = relevant_until(line, frames, 0)
-    frames_after = Enum.take(frames, frame.index - length(frames))
+    frames_after = Enum.take(frames, p1_index - length(frames))
 
     crosses = Line.Cross.collect_crosses(line, frames_after)
 
     %Line{
       line
-      | p2: Topo.x_translate(p1, p2_index - frame.index, angle),
+      | p2: Topo.x_translate(p1, p2_index - p1_index, angle),
         p2_index: p2_index,
         crosses: crosses
     }

@@ -21,10 +21,8 @@ defmodule Frame do
     :stake,
     :trend_lines,
     :votes,
-    frames: [],
-    strong_points: [],
-    bottom_strong_points: [],
-    top_strong_points: []
+    :strong_points,
+    frames: []
   ]
 
   @behaviour Configurable
@@ -92,12 +90,12 @@ defmodule Frame do
   end
 
   def generate_strong_points(frame) do
-    [all, top, bottom] = StrongPoint.generate(frame.frames)
-    %{frame | strong_points: all, bottom_strong_points: bottom, top_strong_points: top}
+    [all, bottom, top] = StrongPoint.generate(frame.frames)
+    %{frame | strong_points: {all, bottom, top}}
   end
 
   def add_trend_lines(frame) do
-    %{frame | trend_lines: TrendLines.new(frame.frames)}
+    %{frame | trend_lines: TrendLines.new(frame)}
   end
 
   @spec add_votes(%Frame{}) :: %Frame{}

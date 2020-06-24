@@ -44,7 +44,7 @@ defmodule StrongPoint do
 
   def generate([], l), do: l
 
-  def generate([{:bottom, frame} | points], [all, top, bottom]) do
+  def generate([{:bottom, frame} | points], [all, bottom, top]) do
     sp = %StrongPoint{
       frame: frame,
       x: frame.index,
@@ -55,10 +55,10 @@ defmodule StrongPoint do
       prev: List.first(all)
     }
 
-    generate(points, [[sp | all], top, [sp | bottom]])
+    generate(points, [[sp | all], [sp | bottom], top])
   end
 
-  def generate([{:top, frame} | points], [all, top, bottom]) do
+  def generate([{:top, frame} | points], [all, bottom, top]) do
     sp = %StrongPoint{
       frame: frame,
       x: frame.index,
@@ -69,6 +69,6 @@ defmodule StrongPoint do
       prev: List.first(all)
     }
 
-    generate(points, [[sp | all], [sp | top], bottom])
+    generate(points, [[sp | all], bottom, [sp | top]])
   end
 end
