@@ -28,34 +28,36 @@ defmodule Line do
   end
 
   @spec new(%Frame{}, %StrongPoint{}, %StrongPoint{}) :: %Line{}
-  def new(frame, p1, p2) do
-    angle = Topo.angle(p1.point, p2.point)
-    slope = calc_slope(p1.point, p2.point)
+  def new(frame, sp1, sp2) do
+    angle = Topo.angle(sp1.point, sp2.point)
+    slope = calc_slope(sp1.point, sp2.point)
 
-    %{coordinates: {p1x, _}} = p1.point
+    %{coordinates: {p1x, _}} = sp1.point
 
     line = %Line{
       angle: angle,
-      p1: p1.point,
-      p2: p2.point,
+      p1: sp1.point,
+      p2: sp2.point,
       slope: slope,
-      b: calc_b(p1.point, slope),
-      source_frames: [p1.frame, p2.frame],
-      geom: %Geo.LineString{coordinates: [p1.point.coordinates, p2.point.coordinates]}
+      b: calc_b(sp1.point, slope),
+      source_frames: [sp1.frame, sp2.frame]
     }
 
     p2x = relevant_until(line, frame.frames, 0)
-    frames_after = Enum.take(frame.frames, p1x - length(frame.frames))
+    frames_after = Enum.take(frame.frames, p1x - frame.index)
+    p2 = Topo.x_translate(sp1.point, p2x - p1x, angle)
 
-    crosses = Line.Cross.collect_crosses(line, frames_after)
-
-    line = %Line{
+    line = %{
       line
-      | p2: Topo.x_translate(p1.point, p2x - p1x, angle),
-        crosses: crosses
+      | p2: p2,
+        geom: %Geo.LineString{coordinates: [sp1.point.coordinates, p2.coordinates]}
     }
 
-    %{line | respect: calc_respect(line, frame)}
+    %{
+      line
+      | crosses: Line.Cross.collect_crosses(line, frames_after),
+        respect: calc_respect(line, frame)
+    }
   end
 
   def calc_respect(line, frame) do
