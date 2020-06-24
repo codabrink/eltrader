@@ -6,12 +6,11 @@ defmodule Line do
     :p2,
     :angle,
     :type,
-    :p1_index,
-    :p2_index,
     :length,
     :geom,
     :slope,
     :b,
+    :respect,
     crosses: [],
     source_frames: []
   ]
@@ -19,52 +18,57 @@ defmodule Line do
   def relevant_until(_, [], index), do: index
 
   def relevant_until(line, [frame | tail], index) do
-    distance = Topo.distance(frame.stem_geom, line.geom)
+    y = y_at(line, frame.index)
+    distance = min(abs(y - frame.high), abs(y - frame.low))
 
     cond do
-      abs(distance) < frame.close * 0.005 -> relevant_until(line, tail, frame.index)
+      distance < frame.close * 0.01 -> relevant_until(line, tail, frame.index)
       true -> relevant_until(line, tail, index)
     end
   end
 
-  @spec new([%Frame{}], %Geo.Point{}, %Geo.Point{}, [%Frame{}]) :: %Line{}
-  def new(frames, p1, p2, source_frames) do
-    angle = Topo.angle(p1, p2)
-    p2 = Topo.translate(p1, 20000.0, angle)
-    slope = calc_slope(p1, p2)
+  @spec new(%Frame{}, %StrongPoint{}, %StrongPoint{}) :: %Line{}
+  def new(frame, p1, p2) do
+    angle = Topo.angle(p1.point, p2.point)
+    slope = calc_slope(p1.point, p2.point)
 
-    %{coordinates: {p1_index, _}} = p1
+    %{coordinates: {p1x, _}} = p1.point
 
     line = %Line{
       angle: angle,
-      p1: p1,
-      p2: p2,
+      p1: p1.point,
+      p2: p2.point,
       slope: slope,
-      b: calc_b(p1, slope),
-      source_frames: source_frames,
-      geom: %Geo.LineString{coordinates: [p1.coordinates, p2.coordinates]},
-      p1_index: p1_index
+      b: calc_b(p1.point, slope),
+      source_frames: [p1.frame, p2.frame],
+      geom: %Geo.LineString{coordinates: [p1.point.coordinates, p2.point.coordinates]}
     }
 
-    p2_index = relevant_until(line, frames, 0)
-    frames_after = Enum.take(frames, p1_index - length(frames))
+    p2x = relevant_until(line, frame.frames, 0)
+    frames_after = Enum.take(frame.frames, p1x - length(frame.frames))
 
     crosses = Line.Cross.collect_crosses(line, frames_after)
 
-    %Line{
+    line = %Line{
       line
-      | p2: Topo.x_translate(p1, p2_index - p1_index, angle),
-        p2_index: p2_index,
+      | p2: Topo.x_translate(p1.point, p2x - p1x, angle),
         crosses: crosses
     }
+
+    %{line | respect: calc_respect(line, frame)}
   end
 
-  # defp zip_price_diff([], _), do: []
-  #
-  # defp zip_price_dff([frame | tail], line) do
-  # diff = frame.close - y_at(line, frame.index)
-  # [{frame, diff} | zip_price_diff(tail, line)]
-  # end
+  def calc_respect(line, frame) do
+    %{p1: %{coordinates: {p1x, _}}} = line
+
+    frame.strong_points
+    |> elem(0)
+    |> Enum.filter(fn %{point: %{coordinates: {x, _}}} -> x > p1x end)
+    |> Enum.filter(fn %{point: %{coordinates: {x, y}}} ->
+      Topo.distance(line.geom, {x, y}) < y * 0.01
+    end)
+    |> length()
+  end
 
   # Calculate slope
   defp calc_slope(%{coordinates: {x1, y1}}, %{coordinates: {x2, y2}}), do: (y2 - y1) / (x2 - x1)

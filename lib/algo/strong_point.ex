@@ -1,13 +1,13 @@
 defmodule StrongPoint do
   @derive {Jason.Encoder, except: [:frame, :prev, :prev_top, :prev_bottom]}
-  defstruct [:frame, :prev, :prev_bottom, :prev_top, :strength, :x, :y]
+  defstruct [:frame, :prev, :prev_bottom, :prev_top, :strength, :point]
   @behaviour Configurable
   alias Trader.Cache
 
   @config %{
     population: %R{
       range: 2..10,
-      value: 3
+      value: 4
     }
   }
 
@@ -47,8 +47,7 @@ defmodule StrongPoint do
   def generate([{:bottom, frame} | points], [all, bottom, top]) do
     sp = %StrongPoint{
       frame: frame,
-      x: frame.index,
-      y: frame.low,
+      point: %Geo.Point{coordinates: {frame.index, frame.low}},
       strength: frame.bottom_dominion,
       prev_top: List.first(top),
       prev_bottom: List.first(bottom),
@@ -61,8 +60,7 @@ defmodule StrongPoint do
   def generate([{:top, frame} | points], [all, bottom, top]) do
     sp = %StrongPoint{
       frame: frame,
-      x: frame.index,
-      y: frame.high,
+      point: %Geo.Point{coordinates: {frame.index, frame.high}},
       strength: frame.top_dominion,
       prev_top: List.first(top),
       prev_bottom: List.first(bottom),
