@@ -35,7 +35,7 @@ defmodule Decision.TrendReclaim do
   @spec run(%Frame{}) :: [%Vote{}]
   def run(%Frame{} = frame) do
     lines = frame.trend_lines.top_lines ++ frame.trend_lines.bottom_lines
-    votes(lines, Enum.reverse(frame.frames), [])
+    votes(lines, Enum.reverse(frame.before), [])
   end
 
   @doc """

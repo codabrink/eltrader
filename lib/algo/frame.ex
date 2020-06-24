@@ -1,5 +1,5 @@
 defmodule Frame do
-  @derive {Jason.Encoder, except: [:prev, :body_geom, :stem_geom, :frames]}
+  @derive {Jason.Encoder, except: [:body_geom, :stem_geom, :before, :after, :next, :prev]}
   defstruct [
     :open_time,
     :open,
@@ -16,13 +16,16 @@ defmodule Frame do
     :index,
     :momentum,
     :prev,
+    :next,
     :bottom_dominion,
     :top_dominion,
     :stake,
     :trend_lines,
     :votes,
     :strong_points,
-    frames: []
+    before: [],
+    after: [],
+    check: []
   ]
 
   @behaviour Configurable
@@ -57,32 +60,13 @@ defmodule Frame do
     }
   end
 
-  def zip_frames([], _), do: []
-
-  def zip_frames([frame | frames], prev) do
-    frame_width = config(:frame_width)
-
-    frame = %{
-      frame
-      | prev: prev,
-        frames:
-          case prev do
-            %{frames: frames} ->
-              frames ++ [frame]
-
-            _ ->
-              [frame]
-          end
-    }
-
-    [frame | zip_frames(frames, frame)]
-  end
-
   def complete([]), do: []
   def complete([frame]), do: [complete(frame)]
   def complete([frame | frames]), do: [frame | complete(frames)]
 
   def complete(frame) do
+    frame = %{frame | check: frame.before}
+
     frame
     |> generate_strong_points()
     |> add_trend_lines()
@@ -90,7 +74,7 @@ defmodule Frame do
   end
 
   def generate_strong_points(frame) do
-    [all, bottom, top] = StrongPoint.generate(frame.frames)
+    [all, bottom, top] = StrongPoint.generate(frame.before)
     %{frame | strong_points: {all, bottom, top}}
   end
 

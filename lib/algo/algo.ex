@@ -25,13 +25,33 @@ defmodule Algo do
     frames =
       to_frames(frames, 0, nil)
       |> Frame.merge_dominion()
-      # |> Reversal.merge_reversals()
-      |> Frame.zip_frames(nil)
-      |> Frame.complete()
+      |> Enum.reverse()
+      |> link(:prev, :before)
+      |> Enum.reverse()
+      |> link(:next, :after)
+
+    frames = Frame.complete(frames)
 
     %Payload{
       frames: frames
     }
+
+    # |> Reversal.merge_reversals()
+  end
+
+  def link([], _, _), do: []
+
+  def link([frame | frames], ref_key, list_key) do
+    prev =
+      case frames do
+        [prev | _] -> prev
+        _ -> nil
+      end
+
+    [
+      %{frame | ref_key => prev, list_key => frames}
+      | link(frames, ref_key, list_key)
+    ]
   end
 
   def votes_for(symbol, interval, frame) do

@@ -43,8 +43,8 @@ defmodule Line do
       source_frames: [sp1.frame, sp2.frame]
     }
 
-    p2x = relevant_until(line, frame.frames, 0)
-    frames_after = Enum.take(frame.frames, p1x - frame.index)
+    p2x = relevant_until(line, frame.before, 0)
+    frames_after = Enum.take(frame.before, p1x - frame.index)
     p2 = Topo.x_translate(sp1.point, p2x - p1x, angle)
 
     line = %{
