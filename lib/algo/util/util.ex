@@ -1,6 +1,9 @@
 require Protocol
 
 defmodule Util do
+  def inspect(o, times) do
+  end
+
   def to_ms([]), do: []
   def to_ms([a | t]), do: [to_ms(a) | to_ms(t)]
 

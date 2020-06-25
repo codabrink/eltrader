@@ -26,14 +26,12 @@ defmodule StrongPoint do
       frames
       |> Enum.sort(fn f1, f2 -> f1.bottom_dominion >= f2.bottom_dominion end)
       |> Enum.slice(0..population)
-      |> Enum.sort(fn f1, f2 -> f1.open_time <= f2.open_time end)
       |> Enum.map(fn f -> {:bottom, f} end)
 
     top_points =
       frames
       |> Enum.sort(fn f1, f2 -> f1.top_dominion >= f2.top_dominion end)
       |> Enum.slice(0..population)
-      |> Enum.sort(fn f1, f2 -> f1.open_time <= f2.open_time end)
       |> Enum.map(fn f -> {:top, f} end)
 
     (bottom_points ++ top_points)

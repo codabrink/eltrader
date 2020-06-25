@@ -22,7 +22,7 @@ defmodule Line do
     distance = min(abs(y - frame.high), abs(y - frame.low))
 
     cond do
-      distance < frame.close * 0.01 -> relevant_until(line, tail, frame.index)
+      distance < frame.close * 0.01 -> frame.index
       true -> relevant_until(line, tail, index)
     end
   end
@@ -44,7 +44,6 @@ defmodule Line do
     }
 
     p2x = relevant_until(line, frame.before, 0)
-    frames_after = Enum.take(frame.before, p1x - frame.index)
     p2 = Topo.x_translate(sp1.point, p2x - p1x, angle)
 
     line = %{
@@ -55,7 +54,7 @@ defmodule Line do
 
     %{
       line
-      | crosses: Line.Cross.collect_crosses(line, frames_after),
+      | crosses: Line.Cross.collect_crosses(line, frame.after),
         respect: calc_respect(line, frame)
     }
   end

@@ -25,10 +25,7 @@ defmodule Algo do
     frames =
       to_frames(frames, 0, nil)
       |> Frame.merge_dominion()
-      |> Enum.reverse()
-      |> link(:prev, :before)
-      |> Enum.reverse()
-      |> link(:next, :after)
+      |> double_link()
 
     frames = Frame.complete(frames)
 
@@ -39,18 +36,22 @@ defmodule Algo do
     # |> Reversal.merge_reversals()
   end
 
+  def double_link(frames) do
+    frames
+    |> Enum.reverse()
+    |> link(:prev, :before)
+    |> Enum.reverse()
+    |> link(:next, :after)
+  end
+
   def link([], _, _), do: []
 
-  def link([frame | frames], ref_key, list_key) do
-    prev =
-      case frames do
-        [prev | _] -> prev
-        _ -> nil
-      end
+  def link([frame], ref_key, list_key), do: [%{frame | ref_key => nil, list_key => []}]
 
+  def link([frame, ref | frames], ref_key, list_key) do
     [
-      %{frame | ref_key => prev, list_key => frames}
-      | link(frames, ref_key, list_key)
+      %{frame | ref_key => ref, list_key => frames}
+      | link([ref | frames], ref_key, list_key)
     ]
   end
 

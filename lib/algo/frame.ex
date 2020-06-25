@@ -24,8 +24,7 @@ defmodule Frame do
     :votes,
     :strong_points,
     before: [],
-    after: [],
-    check: []
+    after: []
   ]
 
   @behaviour Configurable
@@ -65,8 +64,6 @@ defmodule Frame do
   def complete([frame | frames]), do: [frame | complete(frames)]
 
   def complete(frame) do
-    frame = %{frame | check: frame.before}
-
     frame
     |> generate_strong_points()
     |> add_trend_lines()
