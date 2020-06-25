@@ -108,7 +108,6 @@ export default function candles({ svg, data, x }) {
 }
 
 function candleMouseover(div, d) {
-  console.log(d)
   div.style('opacity', 1)
   div
     .html(

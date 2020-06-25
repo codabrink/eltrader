@@ -54,7 +54,7 @@ defmodule Line do
 
     %{
       line
-      | crosses: Line.Cross.collect_crosses(line, frame.after),
+      | crosses: Line.Cross.collect_crosses(line, frame.before),
         respect: calc_respect(line, frame)
     }
   end
