@@ -1,4 +1,18 @@
 defmodule Decision.TrendReclaim do
+  use Configurable,
+    config: %{
+      influence: %R{
+        range: 0..1,
+        value: 1,
+        step: 0.1
+      },
+      max_distance: %R{
+        range: 0..5,
+        value: 0.01,
+        denominator: 100
+      }
+    }
+
   @moduledoc """
   When a trend is broken and reclaimed, it's bullish.
   This module influences the bias positively when this is recognized.
@@ -6,30 +20,6 @@ defmodule Decision.TrendReclaim do
   defstruct [:start_frame, :end_frame, :width, :depth]
 
   @behaviour Decision.Behavior
-  @behaviour Configurable
-  alias Trader.Cache
-
-  # percentage of price. If candle is further than this, ignore for line.
-  @config %{
-    influence: %R{
-      range: 0..1,
-      value: 1,
-      step: 0.1
-    },
-    max_distance: %R{
-      range: 0..5,
-      value: 0.01,
-      denominator: 100
-    }
-  }
-
-  @impl Configurable
-  def config(), do: __MODULE__ |> to_string |> Cache.config() || @config
-
-  def config(key) do
-    %{^key => %{:value => value}} = config()
-    value
-  end
 
   @impl Decision.Behavior
   @spec run(%Frame{}) :: [%Vote{}]

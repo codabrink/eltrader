@@ -1,6 +1,6 @@
 defmodule Algo do
   @default_symbol "BTCUSDT"
-  @default_interval "1h"
+  @default_interval "5m"
 
   defmodule Payload do
     @derive Jason.Encoder

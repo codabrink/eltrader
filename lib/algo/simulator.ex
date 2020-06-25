@@ -1,21 +1,11 @@
 defmodule Simulator do
-  @behaviour Configurable
-  alias Trader.Cache
-
-  @config %{
-    hours: %R{
-      range: 36..128,
-      value: 36
+  use Configurable,
+    config: %{
+      hours: %R{
+        range: 36..128,
+        value: 36
+      }
     }
-  }
-
-  @impl Configurable
-  def config(), do: __MODULE__ |> to_string |> Cache.config() || @config
-
-  def config(key) do
-    %{^key => %{:value => value}} = config()
-    value
-  end
 
   def run(symbol \\ "BTCUSDT", interval \\ "15m")
       when is_bitstring(symbol) and is_bitstring(interval) do

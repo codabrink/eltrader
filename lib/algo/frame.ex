@@ -1,4 +1,12 @@
 defmodule Frame do
+  use Configurable,
+    config: %{
+      frame_width: %R{
+        range: 100..300,
+        value: 100
+      }
+    }
+
   @derive {Jason.Encoder, except: [:body_geom, :stem_geom, :before, :after, :next, :prev]}
   defstruct [
     :open_time,
@@ -26,24 +34,6 @@ defmodule Frame do
     before: [],
     after: []
   ]
-
-  @behaviour Configurable
-  alias Trader.Cache
-
-  @config %{
-    frame_width: %R{
-      range: 100..300,
-      value: 100
-    }
-  }
-
-  @impl Configurable
-  def config(), do: __MODULE__ |> to_string |> Cache.config() || @config
-
-  def config(key) do
-    %{^key => %{:value => value}} = config()
-    value
-  end
 
   def new(frame, prev, index, _opts) do
     price_average = (frame.open + frame.high + frame.low + frame.close) / 4.0

@@ -1,28 +1,18 @@
 defmodule Api.Sim do
-  @behaviour Configurable
-  alias Trader.Cache
+  use Configurable,
+    config: %{
+      slippage: %R{
+        range: 1..4,
+        denominator: 100,
+        value: 0.01
+      },
+      fee: %R{
+        value: 0.00075
+      }
+    }
 
   defmodule Stake do
     defstruct [:fiat, :asset]
-  end
-
-  @config %{
-    slippage: %R{
-      range: 1..4,
-      denominator: 100,
-      value: 0.01
-    },
-    fee: %R{
-      value: 0.00075
-    }
-  }
-
-  @impl Configurable
-  def config(), do: __MODULE__ |> to_string |> Cache.config() || @config
-
-  def config(key) do
-    %{^key => %{:value => value}} = config()
-    value
   end
 
   @spec buy(%Stake{}, %Frame{}) :: %Stake{}

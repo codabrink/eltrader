@@ -1,4 +1,18 @@
 defmodule Decision.TrendBreak do
+  use Configurable,
+    config: %{
+      influence: %R{
+        range: 0..1,
+        value: 1,
+        step: 0.1
+      },
+      max_distance: %R{
+        range: 0..5,
+        value: 0.01,
+        denominator: 100
+      }
+    }
+
   @moduledoc """
   When a trend is broken and breaks down, it's bearish.
   This module influences the bias negatively when this is recognized.
@@ -6,29 +20,6 @@ defmodule Decision.TrendBreak do
   defstruct [:start_frame, :end_frame, :width, :depth]
 
   @behaviour Decision.Behavior
-  @behaviour Configurable
-  alias Trader.Cache
-
-  @config %{
-    influence: %R{
-      range: 0..1,
-      value: 1,
-      step: 0.1
-    },
-    max_distance: %R{
-      range: 0..5,
-      value: 0.01,
-      denominator: 100
-    }
-  }
-
-  @impl Configurable
-  def config(), do: __MODULE__ |> to_string |> Cache.config() || @config
-
-  def config(key) do
-    %{^key => %{:value => value}} = config()
-    value
-  end
 
   @impl Decision.Behavior
   @spec run(%Frame{}) :: [%Vote{}]

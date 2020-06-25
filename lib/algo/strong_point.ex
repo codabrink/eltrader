@@ -1,23 +1,14 @@
 defmodule StrongPoint do
   @derive {Jason.Encoder, except: [:frame, :prev, :prev_top, :prev_bottom]}
   defstruct [:frame, :prev, :prev_bottom, :prev_top, :strength, :point]
-  @behaviour Configurable
-  alias Trader.Cache
 
-  @config %{
-    population: %R{
-      range: 2..10,
-      value: 4
+  use Configurable,
+    config: %{
+      population: %R{
+        range: 2..10,
+        value: 4
+      }
     }
-  }
-
-  @impl Configurable
-  def config(), do: __MODULE__ |> to_string |> Cache.config() || @config
-
-  def config(key) do
-    %{^key => %{:value => value}} = config()
-    value
-  end
 
   def generate(frames) do
     population = floor(config(:population) / 100 * length(frames))
