@@ -27,29 +27,26 @@ defmodule Line do
     end
   end
 
-  @spec new(%Frame{}, %StrongPoint{}, %StrongPoint{}) :: %Line{}
-  def new(frame, sp1, sp2) do
-    angle = Topo.angle(sp1.point, sp2.point)
-    slope = calc_slope(sp1.point, sp2.point)
-
-    %{coordinates: {p1x, _}} = sp1.point
+  def new(frame, %Point{} = sp1, %Point{} = sp2) do
+    angle = Topo.angle(sp1.coords, sp2.coords)
+    slope = calc_slope(sp1.coords, sp2.coords)
 
     line = %Line{
       angle: angle,
-      p1: sp1.point,
-      p2: sp2.point,
+      p1: sp1.coords,
+      p2: sp2.coords,
       slope: slope,
-      b: calc_b(sp1.point, slope),
+      b: calc_b(sp1.coords, slope),
       source_frames: [sp1.frame, sp2.frame]
     }
 
     p2x = relevant_until(line, frame.before, 0)
-    p2 = Topo.x_translate(sp1.point, p2x - p1x, angle)
+    p2 = Topo.x_translate(sp1.coords, p2x - sp1.x, angle)
 
     line = %{
       line
-      | p2: p2,
-        geom: %Geo.LineString{coordinates: [sp1.point.coordinates, p2.coordinates]}
+      | p2: p2.coordinates,
+        geom: %Geo.LineString{coordinates: [sp1.coords, p2.coordinates]}
     }
 
     %{
@@ -60,21 +57,21 @@ defmodule Line do
   end
 
   def calc_respect(line, frame) do
-    %{p1: %{coordinates: {p1x, _}}} = line
+    %{p1: {p1x, _}} = line
 
-    frame.strong_points
+    frame.points
     |> elem(0)
-    |> Enum.filter(fn %{point: %{coordinates: {x, _}}} -> x > p1x end)
-    |> Enum.filter(fn %{point: %{coordinates: {x, y}}} ->
+    |> Enum.filter(fn %{coords: {x, _}} -> x > p1x end)
+    |> Enum.filter(fn %{coords: {x, y}} ->
       Topo.distance(line.geom, {x, y}) < y * 0.01
     end)
     |> length()
   end
 
   # Calculate slope
-  defp calc_slope(%{coordinates: {x1, y1}}, %{coordinates: {x2, y2}}), do: (y2 - y1) / (x2 - x1)
+  defp calc_slope({x1, y1}, {x2, y2}), do: (y2 - y1) / (x2 - x1)
   # Used in the slope formula
-  defp calc_b(%{coordinates: {x, y}}, m), do: y - m * x
+  defp calc_b({x, y}, m), do: y - m * x
   def y_at(line, x), do: line.slope * x + line.b
-  def point_at(line, x), do: %Geo.Point{coordinates: {x, y_at(line, x)}}
+  def coords_at(line, x), do: {x, y_at(line, x)}
 end

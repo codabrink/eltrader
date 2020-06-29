@@ -1,4 +1,8 @@
 defmodule Frame do
+  @ignore [:body_geom, :stem_geom, :before, :after, :next, :prev]
+  @derive {Jason.Encoder, except: @ignore}
+  @derive {Inspect, except: @ignore}
+
   use Configurable,
     config: %{
       frame_width: %R{
@@ -7,7 +11,6 @@ defmodule Frame do
       }
     }
 
-  @derive {Jason.Encoder, except: [:body_geom, :stem_geom, :before, :after, :next, :prev]}
   defstruct [
     :open_time,
     :open,
@@ -28,11 +31,13 @@ defmodule Frame do
     :bottom_dominion,
     :top_dominion,
     :stake,
-    :trend_lines,
-    :votes,
-    :strong_points,
+    :rsi_14,
     before: [],
-    after: []
+    after: [],
+    points: [],
+    trend_lines: [],
+    strong_points: [],
+    votes: []
   ]
 
   def new(frame, prev, index, _opts) do
@@ -55,24 +60,34 @@ defmodule Frame do
 
   def complete(frame) do
     frame
+    |> generate_points()
     |> generate_strong_points()
     |> add_trend_lines()
-    |> add_votes()
+    |> add_rsi(14)
+  end
+
+  def add_rsi(frame, width) do
+    %{frame | rsi_14: Indicators.RSI.calculate(frame, width)}
+  end
+
+  def generate_points(frame) do
+    [all, bottom, top] = Point.generate(frame)
+    %{frame | points: {all, bottom, top}}
   end
 
   def generate_strong_points(frame) do
-    [all, bottom, top] = StrongPoint.generate(frame.before)
+    [all, bottom, top] = StrongPoint.generate(frame)
     %{frame | strong_points: {all, bottom, top}}
   end
 
   def add_trend_lines(frame) do
-    %{frame | trend_lines: TrendLines.new(frame)}
+    %{frame | trend_lines: TrendLine.generate(frame)}
   end
 
   @spec add_votes(%Frame{}) :: %Frame{}
   def add_votes(frame) do
     votes =
-      [Decision.TrendReclaim]
+      [Decision.TrendReclaim, Decision.TrendBreak]
       |> Enum.reduce([], fn d, acc -> acc ++ apply(d, :run, [frame]) end)
 
     %{frame | votes: votes}
@@ -108,8 +123,8 @@ defmodule Frame do
     [
       %Frame{
         frame
-        | top_dominion: peak_dominion(frame, {first, last}, :top, 1),
-          bottom_dominion: peak_dominion(frame, {first, last}, :bottom, 1)
+        | top_dominion: peak_dominion(frame, {first, last}, :top, 0),
+          bottom_dominion: peak_dominion(frame, {first, last}, :bottom, 0)
       }
       | merge_dominion(tail, frames)
     ]

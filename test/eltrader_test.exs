@@ -3,15 +3,32 @@ defmodule CandlesTest do
   doctest Candles
 
   test "Converts ranges to lists properly" do
-    assert Range.Helper.to_list(0..100, 10) == [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
+    c =
+      Candles.candles(
+        "BTCUSDT",
+        "15m",
+        DateTime.utc_now() |> Timex.shift(days: -1),
+        DateTime.utc_now()
+      )
 
-    assert List.Helper.group_adjacent([1, 2, 3, 6, 7, 8, 9, 20, 22]) == [
-             [1, 2, 3],
-             [6, 7, 8, 9],
-             [20],
-             [22]
-           ]
+    assert length(c) > 1
+  end
 
-    assert List.Helper.subtract([1, 2, 3, 4, 5, 6, 7], [[3], [7]]) == [1, 2, 4, 5, 6]
+  test "Data is alright on the last frame" do
+    last_frame = Algo.run().frames |> List.last()
+
+    {all, bottom, top} = last_frame.points
+    assert length(all) > 1
+    assert length(bottom) > 1
+    assert length(top) > 1
+
+    {all, bottom, top} = last_frame.strong_points
+    assert length(all) > 1
+    assert length(bottom) > 1
+    assert length(top) > 1
+
+    [sp | _] = all
+    assert length(sp.points_after) > 1
+    IO.inspect(last_frame.trend_lines)
   end
 end

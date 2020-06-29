@@ -4,7 +4,7 @@ defmodule Candles do
 
     typedstruct do
       field :k, Range
-      field :candles, [%Candle{}]
+      field :candles, [%Frame{}]
     end
   end
 
@@ -95,6 +95,8 @@ defmodule Candles do
 
   @spec download_candles(String.t(), String.t(), number(), number()) :: [%Frame{}]
   def download_candles(symbol, interval, start_ms, end_ms) do
+    if end_ms < start_ms, do: raise("end_ms must be after start_ms")
+
     url =
       "https://api.binance.com/api/v3/klines?" <>
         "symbol=#{symbol}" <>
@@ -106,7 +108,7 @@ defmodule Candles do
       HTTPoison.get(url)
       |> case do
         {:ok, response} -> response.body
-        {:error, response} -> IO.puts(response)
+        {:error, response} -> response
       end
       |> Jason.decode!(%{keys: :atoms!})
       |> Enum.map(&Candle.new/1)
@@ -125,8 +127,10 @@ defmodule Candles do
   def candles(symbol, interval),
     do: candles(symbol, interval, Timex.beginning_of_day(DateTime.utc_now()))
 
-  def candles(symbol, interval, end_time),
-    do: candles(symbol, interval, Timex.shift(end_time, days: -20), end_time)
+  def candles(symbol, interval, end_time) do
+    step = Util.to_ms(interval)
+    candles(symbol, interval, Timex.shift(end_time, milliseconds: -(step * 500)), end_time)
+  end
 
   @spec candles(String.t(), String.t(), any, any) :: [%Frame{}]
   def candles(symbol, interval, start_time, end_time) do
@@ -157,7 +161,7 @@ defmodule Candles do
         Enum.slice(
           candles,
           index(List.first(candles).open_time, start_ms, step),
-          index(start_ms, end_ms, step)
+          index(List.first(candles).open_time, end_ms, step)
         )
 
       _ ->
@@ -165,7 +169,7 @@ defmodule Candles do
     end
   end
 
-  def index(start_ms, end_ms, step), do: floor((end_ms - start_ms) / step)
+  def index(start_ms, end_ms, step), do: round((end_ms - start_ms) / step)
 
   def candles_json(symbol, interval, start_time, end_time) do
     candles(symbol, interval, start_time, end_time)

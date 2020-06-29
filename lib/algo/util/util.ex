@@ -1,6 +1,13 @@
 require Protocol
 
 defmodule Util do
+  def pry do
+    quote do
+      require IEx
+      IEx.pry()
+    end
+  end
+
   def inspect(o, times) do
   end
 

@@ -8,9 +8,11 @@ defmodule Decider do
     stake =
       cond do
         bias > 0.75 ->
+          IO.puts("BUY @#{frame.open}, bias: #{bias}")
           Api.Sim.buy(stake, frame)
 
         bias < -0.75 ->
+          IO.puts("SELL @#{frame.open}, bias: #{bias}")
           Api.Sim.sell(stake, frame)
 
         true ->

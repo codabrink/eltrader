@@ -3,7 +3,17 @@ defmodule Line.Cross do
   # @cross_min_gap 1
   @break_min_distance 0.0001
   @type cross_type :: :up | :down | :bounce | :reject
-  defstruct [:prev, :line, :did_break, :width, :frames, :open_point, :close_point, :type]
+  defstruct [
+    :prev,
+    :line,
+    :did_break,
+    :width,
+    :depth,
+    :frames,
+    :open_coords,
+    :close_coords,
+    :type
+  ]
 
   def collect_crosses(line, frames), do: _collect_crosses(line, frames, [])
 
@@ -43,10 +53,11 @@ defmodule Line.Cross do
   def create(line, crossing_frames) do
     %Line.Cross{
       frames: crossing_frames,
-      open_point: Line.point_at(line, List.first(crossing_frames).index),
-      close_point: Line.point_at(line, List.last(crossing_frames).index),
+      open_coords: Line.coords_at(line, List.last(crossing_frames).index),
+      close_coords: Line.coords_at(line, List.first(crossing_frames).index),
       type: cross_type(line, crossing_frames),
-      width: length(crossing_frames)
+      width: length(crossing_frames),
+      depth: calc_depth(line, crossing_frames, {0, 0})
     }
   end
 
@@ -55,8 +66,8 @@ defmodule Line.Cross do
     first = List.first(crossing_frames)
     last = List.last(crossing_frames)
 
-    open = first.open - Line.y_at(line, first.index)
-    close = last.close - Line.y_at(line, last.index)
+    open = last.open - Line.y_at(line, last.index)
+    close = first.close - Line.y_at(line, first.index)
 
     cond do
       open <= 0 && close <= 0 -> :reject
@@ -64,6 +75,14 @@ defmodule Line.Cross do
       open > 0 && close <= 0 -> :down
       open > 0 && close > 0 -> :bounce
     end
+  end
+
+  def calc_depth(_, [], val), do: val
+
+  def calc_depth(line, [frame | frames], {max, min}) do
+    %{high: high, low: low} = frame
+    line_y = Line.y_at(line, frame.index)
+    calc_depth(line, frames, {max(max, high - line_y), min(min, low - line_y)})
   end
 
   def all?(el), do: Enum.all?(el, &is?/1)

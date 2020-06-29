@@ -1,6 +1,12 @@
 defmodule Algo do
   @default_symbol "BTCUSDT"
   @default_interval "5m"
+  use Configurable,
+    config: %{
+      frame_list_max: %R{
+        value: 200
+      }
+    }
 
   defmodule Payload do
     @derive Jason.Encoder
@@ -32,8 +38,6 @@ defmodule Algo do
     %Payload{
       frames: frames
     }
-
-    # |> Reversal.merge_reversals()
   end
 
   def double_link(frames) do
@@ -49,6 +53,8 @@ defmodule Algo do
   def link([frame], ref_key, list_key), do: [%{frame | ref_key => nil, list_key => []}]
 
   def link([frame, ref | frames], ref_key, list_key) do
+    frame_list_max = config(:frame_list_max)
+
     [
       %{frame | ref_key => ref, list_key => frames}
       | link([ref | frames], ref_key, list_key)

@@ -32,6 +32,7 @@ export default function candles({ svg, data, x }) {
     .attr('fill', (d) => (d.open > d.close ? 'red' : 'green'))
     .on('mouseover', (d) => candleMouseover(tooltipDiv, d))
     .on('mouseout', (d) => candleMouseout(tooltipDiv, d))
+    .on('click', (d) => console.log(d))
 
   let stems = svg
     .selectAll('.stem')

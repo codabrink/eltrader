@@ -7,8 +7,7 @@ defmodule Simulator do
       }
     }
 
-  def run(symbol \\ "BTCUSDT", interval \\ "15m")
-      when is_bitstring(symbol) and is_bitstring(interval) do
+  def run(symbol \\ "BTCUSDT", interval \\ "5m") do
     hours = config(:hours)
     start_time = DateTime.utc_now() |> Timex.shift(hours: -(hours * 2))
     end_time = DateTime.utc_now()

@@ -1,17 +1,4 @@
 defmodule Candle do
-  @derive Jason.Encoder
-  defstruct [
-    :open_time,
-    :open,
-    :high,
-    :low,
-    :close,
-    :volume,
-    :close_time,
-    :num_trades,
-    :asset_volume
-  ]
-
   def new(rc) when is_map(rc), do: struct(Frame, rc)
 
   def new(rc) do

@@ -1,4 +1,4 @@
-defmodule Decision.TrendReclaim do
+defmodule Voter.Trend do
   use Configurable,
     config: %{
       influence: %R{
@@ -25,7 +25,7 @@ defmodule Decision.TrendReclaim do
   @spec run(%Frame{}) :: [%Vote{}]
   def run(%Frame{} = frame) do
     lines = frame.trend_lines.top_lines ++ frame.trend_lines.bottom_lines
-    votes(lines, Enum.reverse(frame.before), [])
+    votes(lines, frame.before, [])
   end
 
   @doc """
@@ -50,18 +50,20 @@ defmodule Decision.TrendReclaim do
     end
   end
 
-  def vote(_, rejection_count) when rejection_count > 2 do
+  def vote(_, count) when count > 2 do
     %Vote{source: Decision.TrendReclaim, bias: 1}
   end
 
-  def vote(_, _), do: %Vote{source: Decision.TrendReclaim, bias: 0}
+  def vote(_, _) do
+    %Vote{source: Decision.TrendReclaim, bias: 0}
+  end
 
   @spec count_rejections([%Line.Cross{}]) :: number
   ## should doing percentage of rejections over time
   def count_rejections([]), do: 0
   def count_rejections([cross | tail]), do: count_rejections(cross.type, tail, 0)
 
-  def count_rejections(:reject, [cross | tail], count),
+  def count_rejections(:up, [cross | tail], count),
     do: count_rejections(cross.type, tail, count + 1)
 
   def count_rejections(:bounce, [cross | tail], count),

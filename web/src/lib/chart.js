@@ -70,8 +70,8 @@ export function drawChart(data) {
   indicators.push(candles)
   let trendLines = TrendLines({ svg: chartBody, data, candles, x })
   indicators.push(trendLines)
-  let trendLineCrosses = TrendLineCrosses({ svg: chartBody, data, candles, x })
-  indicators.push(trendLineCrosses)
+  // let trendLineCrosses = TrendLineCrosses({ svg: chartBody, data, candles, x })
+  // indicators.push(trendLineCrosses)
 
   svg.append('defs').append('clipPath').attr('id', 'clip').append('rect').attr('width', w).attr('height', h)
 
