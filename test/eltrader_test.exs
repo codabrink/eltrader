@@ -16,19 +16,18 @@ defmodule CandlesTest do
 
   test "Data is alright on the last frame" do
     last_frame = Algo.run().frames |> List.last()
+  end
 
-    {all, bottom, top} = last_frame.points
-    assert length(all) > 1
-    assert length(bottom) > 1
-    assert length(top) > 1
+  test "Utils work" do
+    assert Util.between?(100.5, 90.1, 110.4)
+  end
 
-    {all, bottom, top} = last_frame.strong_points
-    assert length(all) > 1
-    assert length(bottom) > 1
-    assert length(top) > 1
+  test "Double link is working" do
+    %{frames: frames} = Algo.annotate()
+    [frame | frames] = frames
 
-    [sp | _] = all
-    assert length(sp.points_after) > 1
-    IO.inspect(last_frame.trend_lines)
+    assert frame.index === 0
+    assert frame.next.index === 1
+    assert frame.next.next.index === 2
   end
 end

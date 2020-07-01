@@ -1,9 +1,25 @@
 defmodule Point do
-  @ignore [:frame, :prev, :prev_top, :prev_bottom, :points_after]
+  @ignore [:frame, :prev, :prev_top, :prev_bottom, :points_after, :all_points_after]
   @derive {Jason.Encoder, except: @ignore}
   @derive {Inspect, except: @ignore}
 
-  defstruct [:frame, :points_after, :prev, :prev_bottom, :prev_top, :strength, :coords, :x, :y]
+  defstruct [
+    :type,
+    :frame,
+    :points_after,
+    :all_points_after,
+    :prev,
+    :prev_bottom,
+    :prev_top,
+    :strength,
+    :coords,
+    :x,
+    :y
+  ]
+
+  defmodule Payload do
+    defstruct [:prev, :prev_top, :prev_bottom, generated: []]
+  end
 
   use Configurable,
     config: %{
@@ -31,39 +47,51 @@ defmodule Point do
 
     (bottom_points ++ top_points)
     |> Enum.sort(fn {_, f1}, {_, f2} -> f1.open_time <= f2.open_time end)
-    |> _generate([[], [], []])
-    |> Enum.map(&Enum.reverse/1)
+    |> _generate(%Payload{})
+    |> Enum.reverse()
   end
 
-  defp _generate([], l), do: l
+  defp _generate([], payload), do: payload.generated
 
-  defp _generate([{:bottom, frame} | points], [all, bottom, top]) do
-    sp = %Point{
-      frame: frame,
-      x: frame.index,
-      y: frame.low,
-      coords: {frame.index, frame.low},
-      strength: frame.bottom_dominion,
-      prev_top: List.first(top),
-      prev_bottom: List.first(bottom),
-      prev: List.first(all)
-    }
-
-    _generate(points, [[sp | all], [sp | bottom], top])
+  defp _generate([{type, frame} | points], payload) do
+    {_, payload} = create({type, frame}, payload)
+    _generate(points, payload)
   end
 
-  defp _generate([{:top, frame} | points], [all, bottom, top]) do
-    sp = %Point{
+  def create({type, frame}, payload) do
+    {y, strength, prev_type} =
+      case type do
+        :bottom -> {frame.low, frame.bottom_dominion, :prev_bottom}
+        :top -> {frame.high, frame.top_dominion, :prev_top}
+      end
+
+    point = %Point{
       frame: frame,
       x: frame.index,
-      y: frame.high,
-      coords: {frame.index, frame.high},
-      strength: frame.top_dominion,
-      prev_top: List.first(top),
-      prev_bottom: List.first(bottom),
-      prev: List.first(all)
+      y: y,
+      coords: {frame.index, y},
+      strength: strength,
+      prev_top: payload.prev_top,
+      prev_bottom: payload.prev_bottom,
+      prev: payload.prev,
+      type: type
     }
 
-    _generate(points, [[sp | all], bottom, [sp | top]])
+    {point,
+     %{
+       payload
+       | prev_type => point,
+         prev: point,
+         generated: [point | payload.generated]
+     }}
+  end
+
+  def move_right(point) do
+    create({point.type, point.frame.next}, %Payload{
+      prev: point.prev,
+      prev_top: point.prev_top,
+      prev_bottom: point.prev_bottom
+    })
+    |> elem(0)
   end
 end

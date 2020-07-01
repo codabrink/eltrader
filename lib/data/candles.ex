@@ -33,7 +33,12 @@ defmodule Candles do
     do: Enum.map(cache, & &1.candles) |> write_candles_to_disk(symbol, interval)
 
   def write_candles_to_disk(candles, symbol, interval) do
-    {:ok, file} = File.open(file_path(symbol, interval), [:write])
+    handle_open = fn
+      {:ok, file} -> file
+      {:error, err} -> IO.inspect(err)
+    end
+
+    file = File.open(file_path(symbol, interval), [:write]) |> handle_open.()
     candles |> Jason.encode!() |> (&IO.binwrite(file, &1)).()
     File.close(file)
   end

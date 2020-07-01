@@ -1,15 +1,7 @@
 require Protocol
 
 defmodule Util do
-  def pry do
-    quote do
-      require IEx
-      IEx.pry()
-    end
-  end
-
-  def inspect(o, times) do
-  end
+  def between?(number, a, b), do: number >= min(a, b) and number <= max(a, b)
 
   def to_ms([]), do: []
   def to_ms([a | t]), do: [to_ms(a) | to_ms(t)]

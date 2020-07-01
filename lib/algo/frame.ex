@@ -71,13 +71,11 @@ defmodule Frame do
   end
 
   def generate_points(frame) do
-    [all, bottom, top] = Point.generate(frame)
-    %{frame | points: {all, bottom, top}}
+    %{frame | points: Point.generate(frame)}
   end
 
   def generate_strong_points(frame) do
-    [all, bottom, top] = StrongPoint.generate(frame)
-    %{frame | strong_points: {all, bottom, top}}
+    %{frame | strong_points: StrongPoint.generate(frame)}
   end
 
   def add_trend_lines(frame) do

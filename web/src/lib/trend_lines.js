@@ -5,16 +5,33 @@ function rnd(array) {
 }
 
 export default function TrendLines({ svg, data, x, candles }) {
-  let { trend_lines: topLines } = data.frames[data.frames.length - 1]
+  let {
+    trend_lines: { top: topLines, bottom: bottomLines },
+  } = data.frames[data.frames.length - 1]
 
-  for (const line of topLines) addPoints(line)
+  let _topLines = []
+  let _bottomLines = []
+
+  for (const trendLine of topLines) {
+    for (const line of trendLine.lines) {
+      addPoints(line)
+      _topLines.push(line)
+    }
+  }
+  for (const trendLine of bottomLines) {
+    for (const line of trendLine.lines) {
+      addPoints(line)
+      _bottomLines.push(line)
+    }
+  }
+
   // for (const line of bottomLines) addPoints(line)
 
   let y = candles.getY()
 
   let svgTopLines = svg
     .selectAll('.topline')
-    .data(topLines)
+    .data(_topLines)
     .enter()
     .append('line')
     .attr('class', 'topline')
@@ -26,23 +43,23 @@ export default function TrendLines({ svg, data, x, candles }) {
     .attr('stroke-width', 2)
     .on('click', (d) => console.log(d))
 
-  // let svgBottomLines = svg
-  // .selectAll('.bottomline')
-  // .data(bottomLines)
-  // .enter()
-  // .append('line')
-  // .attr('class', 'bottomline')
-  // .attr('x1', (d) => x(d.p1.x))
-  // .attr('x2', (d) => x(d.p2.x))
-  // .attr('y1', (d) => y(d.p1.y))
-  // .attr('y2', (d) => y(d.p2.y))
-  // .attr('stroke', (d) => rnd(colors))
-  // .attr('stroke-width', 2)
-  // .on('click', (d) => console.log(d))
+  let svgBottomLines = svg
+    .selectAll('.bottomline')
+    .data(_bottomLines)
+    .enter()
+    .append('line')
+    .attr('class', 'bottomline')
+    .attr('x1', (d) => x(d.p1.x))
+    .attr('x2', (d) => x(d.p2.x))
+    .attr('y1', (d) => y(d.p1.y))
+    .attr('y2', (d) => y(d.p2.y))
+    .attr('stroke', (d) => rnd(colors))
+    .attr('stroke-width', 2)
+    .on('click', (d) => console.log(d))
 
   function zoomed({ xz }) {
     svgTopLines.attr('x1', (f) => xz(f.p1.x)).attr('x2', (f) => xz(f.p2.x))
-    // svgBottomLines.attr('x1', (f) => xz(f.p1.x)).attr('x2', (f) => xz(f.p2.x))
+    svgBottomLines.attr('x1', (f) => xz(f.p1.x)).attr('x2', (f) => xz(f.p2.x))
   }
 
   function zoomend() {
@@ -51,11 +68,11 @@ export default function TrendLines({ svg, data, x, candles }) {
       .duration(200)
       .attr('y1', (f) => y(f.p1.y))
       .attr('y2', (f) => y(f.p2.y))
-    // svgBottomLines
-    // .transition()
-    // .duration(200)
-    // .attr('y1', (f) => y(f.p1.y))
-    // .attr('y2', (f) => y(f.p2.y))
+    svgBottomLines
+      .transition()
+      .duration(200)
+      .attr('y1', (f) => y(f.p1.y))
+      .attr('y2', (f) => y(f.p2.y))
   }
 
   return { zoomed, zoomend }

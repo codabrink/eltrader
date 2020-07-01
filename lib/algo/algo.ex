@@ -43,23 +43,17 @@ defmodule Algo do
   def double_link(frames) do
     frames
     |> Enum.reverse()
-    |> link(:prev, :before)
+    |> link(:next)
+    |> link_list(:before)
     |> Enum.reverse()
-    |> link(:next, :after)
+    |> link(:prev)
+    |> link_list(:after)
   end
 
-  def link([], _, _), do: []
-
-  def link([frame], ref_key, list_key), do: [%{frame | ref_key => nil, list_key => []}]
-
-  def link([frame, ref | frames], ref_key, list_key) do
-    frame_list_max = config(:frame_list_max)
-
-    [
-      %{frame | ref_key => ref, list_key => frames}
-      | link([ref | frames], ref_key, list_key)
-    ]
-  end
+  def link([f], _), do: [f]
+  def link([frame, prev | rest], k), do: [frame | link([%{prev | k => frame} | rest], k)]
+  def link_list([], _), do: []
+  def link_list([f | rest], k), do: [%{f | k => rest} | link_list(rest, k)]
 
   def votes_for(symbol, interval, frame) do
     sim_width_hours = C.fetch(:sim_width_hours)
@@ -74,7 +68,7 @@ defmodule Algo do
   end
 
   def quiet() do
-    annotate()
+    run()
     nil
   end
 

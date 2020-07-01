@@ -22,7 +22,7 @@ defmodule Line do
     distance = min(abs(y - frame.high), abs(y - frame.low))
 
     cond do
-      distance < frame.close * 0.01 -> frame.index
+      distance < frame.close * 0.001 -> frame.index
       true -> relevant_until(line, tail, index)
     end
   end
@@ -60,7 +60,6 @@ defmodule Line do
     %{p1: {p1x, _}} = line
 
     frame.points
-    |> elem(0)
     |> Enum.filter(fn %{coords: {x, _}} -> x > p1x end)
     |> Enum.filter(fn %{coords: {x, y}} ->
       Topo.distance(line.geom, {x, y}) < y * 0.01
