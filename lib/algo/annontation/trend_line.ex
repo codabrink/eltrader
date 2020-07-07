@@ -3,7 +3,7 @@ defmodule TrendLine do
   use Configurable,
     config: %{
       min_slope_delta: %R{
-        value: 0.1
+        value: 0.2
       }
     }
 
@@ -48,8 +48,12 @@ defmodule TrendLine do
     cond do
       delta < min_slope_delta ->
         cond do
-          closed_on?(prev, sp.frame) -> [line | lines]
-          true -> [prev | lines]
+          Util.between?(Line.y_at(prev, sp.frame.index), sp.frame.open, sp.frame.next.close) ->
+            [line | lines]
+
+          # closed_on?(prev, sp.frame) ->
+          true ->
+            [prev | lines]
         end
 
       (type === :top && line.slope > prev.slope) ||

@@ -4,14 +4,15 @@ const arrowOffset = 0.2
 
 export default function TrendLineCrosses({ svg, data, x, candles }) {
   let {
-    trend_lines: { top_lines: topLines, bottom_lines: bottomLines },
+    trend_lines: { top, bottom },
   } = data.frames[data.frames.length - 1]
 
+  let lines = top.reduce((acc, v) => [...acc, ...v.lines], [])
+
+  lines = [...lines, ...bottom.reduce((acc, v) => [...acc, ...v.lines], [])]
+
   let y = candles.getY()
-  let crosses = []
-  for (const line of topLines) crosses = crosses.concat(line.crosses)
-  for (const line of bottomLines) crosses = crosses.concat(line.crosses)
-  for (const cross of crosses) addXY(cross.open_point)
+  let crosses = lines.reduce((acc, l) => [...acc, ...l.crosses], [])
 
   let svgCrosses = svg
     .selectAll('.cross')
@@ -19,8 +20,8 @@ export default function TrendLineCrosses({ svg, data, x, candles }) {
     .enter()
     .append('circle')
     .attr('class', 'cross')
-    .attr('cx', (c) => x(c.open_point.x))
-    .attr('cy', (c) => y(c.open_point.y))
+    .attr('cx', (c) => x(c.open_coords[0]))
+    .attr('cy', (c) => y(c.open_coords[1]))
     .attr('r', 4)
     .attr('fill', 'white')
     .attr('stroke', 'black')
@@ -30,31 +31,27 @@ export default function TrendLineCrosses({ svg, data, x, candles }) {
     .data(crosses)
     .enter()
     .append('text')
-    .attr('x', (c) => x(c.open_point.x + arrowOffset))
-    .attr('y', (c) => y(c.open_point.y))
+    .attr('x', (c) => x(c.open_coords[0] + arrowOffset))
+    .attr('y', (c) => y(c.open_coords[1]))
     .attr('dy', '0.35em')
     .text((c) => (c.type === 'reject' || c.type === 'down' ? '↓' : '↑'))
 
   function zoomed({ xz }) {
-    svgCrosses.attr('cx', (c) => xz(c.open_point.x))
-    arrows.attr('x', (c) => xz(c.open_point.x + arrowOffset))
+    svgCrosses.attr('cx', (c) => xz(c.open_coords[0]))
+    arrows.attr('x', (c) => xz(c.open_coords[0] + arrowOffset))
   }
 
   function zoomend() {
     svgCrosses
       .transition()
       .duration(200)
-      .attr('cy', (c) => y(c.open_point.y))
+      .attr('cy', (c) => y(c.open_coords[1]))
     arrows
       .transition()
       .duration(200)
-      .attr('y', (c) => y(c.open_point.y))
+      .attr('y', (c) => y(c.open_coords[1]))
   }
 
   return { zoomed, zoomend }
 }
 
-function addXY(point) {
-  point.x = point.coordinates[0]
-  point.y = point.coordinates[1]
-}
