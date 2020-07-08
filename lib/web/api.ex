@@ -2,6 +2,9 @@ defmodule Api do
   defmodule Endpoint do
     import Plug.Conn
 
+    @symbol "symbol"
+    @interval "interval"
+
     def init(options) do
       options
     end
@@ -51,9 +54,13 @@ defmodule Api do
     end
 
     def render(conn) do
+      conn = Plug.Conn.fetch_query_params(conn)
+
       case conn.path_info do
         ["prices"] ->
-          Algo.run()
+          %{@symbol => symbol, @interval => interval} = conn.params
+
+          Algo.run(symbol, interval)
           |> Jason.encode!()
 
         _ ->

@@ -5,25 +5,25 @@ import { Select } from './UI'
 function App() {
   let [frames, setFrames] = useState([])
   let [interval, setInterval] = useState("15m")
-  let [indicator, setIndicator] = useState("BTCUSDT")
+  let [symbol, setSymbol] = useState("BTCUSDT")
 
   useEffect(() => {
-    fetch(`/prices?interval=${interval}&indicator=${indicator}`)
+    fetch(`/prices?symbol=${symbol}&interval=${interval}`)
       .then((r) => r.json())
       .then((frames) => {
         setFrames(frames)
         chart.drawChart(frames)
       })
-  }, [interval, indicator])
+  }, [symbol, interval])
 
   return (
     <>
       <div id="control-bar" className="p-3 flex">
         <Select
-          label="Indicator"
+          label="Symbol"
           options={['BTCUSDT']}
-          value={indicator}
-          onChange={setIndicator}
+          value={symbol}
+          onChange={setSymbol}
         />
         <Select
           label="Interval"
@@ -33,7 +33,7 @@ function App() {
         />
       </div>
       <div id="chart-container" className="flex-grow w-full">
-        <svg id="chart" key={interval + indicator} />
+        <svg id="chart" key={interval + symbol} />
       </div>
     </>
   )

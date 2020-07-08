@@ -6,7 +6,7 @@ import TrendLineCrosses from './trend_line_crosses'
 
 // const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
-const margin = { top: 25, right: 70, bottom: 75, left: 70 }
+const margin = { top: 10, right: 30, bottom: 40, left: 30 }
 export function getWH() {
   let container = document.getElementById('chart-container')
 
