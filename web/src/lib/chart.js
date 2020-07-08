@@ -6,10 +6,12 @@ import TrendLineCrosses from './trend_line_crosses'
 
 // const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
-const margin = { top: 15, right: 50, bottom: 75, left: 50 }
+const margin = { top: 25, right: 70, bottom: 75, left: 70 }
 export function getWH() {
-  const w = window.innerWidth - margin.left - margin.right
-  const h = window.innerHeight - margin.top - margin.bottom
+  let container = document.getElementById('chart-container')
+
+  const w = container.offsetWidth - margin.left - margin.right
+  const h = container.offsetHeight - margin.top - margin.bottom
   return { w, h }
 }
 
@@ -23,7 +25,7 @@ export function drawChart(data) {
   const { w, h } = getWH()
 
   const svg = d3
-    .select('#container')
+    .select('#chart')
     .attr('width', w + margin.left + margin.right)
     .attr('height', h + margin.top + margin.bottom)
     .append('g')
