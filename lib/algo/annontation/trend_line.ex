@@ -24,8 +24,6 @@ defmodule TrendLine do
     do: [create(sp, frame) | generate(strong_points, frame)]
 
   def create(%Point{points_after: points} = sp, mframe) do
-    IO.puts("Why is this so slow?")
-
     %TrendLine{
       lines: _create([], sp, Enum.take(points, 15), mframe)
     }

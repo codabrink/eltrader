@@ -1,11 +1,14 @@
-import React, { useEffect, useState, useLayoutEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import * as chart from './lib/chart'
 import { Select } from './UI'
+import queryString from 'query-string'
 
 function App() {
+  let search = queryString.parse(window.location.search)
+
   let [data, setData] = useState()
-  let [interval, setInterval] = useState('15m')
-  let [symbol, setSymbol] = useState('BTCUSDT')
+  let [interval, setInterval] = useState(search.interval || '15m')
+  let [symbol, setSymbol] = useState(search.symbol || 'BTCUSDT')
 
   useEffect(() => {
     fetch(`/prices?symbol=${symbol}&interval=${interval}`)
@@ -33,13 +36,21 @@ function App() {
           label="Symbol"
           options={['BTCUSDT', 'ADABTC']}
           value={symbol}
-          onChange={setSymbol}
+          onChange={(symbol) => {
+            setSymbol(symbol)
+            search.symbol = symbol
+            window.location.search = queryString.stringify(search)
+          }}
         />
         <Select
           label="Interval"
           options={['5m', '15m', '30m', '1h', '4h', '1d']}
           value={interval}
-          onChange={setInterval}
+          onChange={(interval) => {
+            setInterval(interval)
+            search.interval = interval
+            window.location.search = queryString.stringify(search)
+          }}
         />
       </div>
       <div id="chart-container" className="flex-grow w-full">
