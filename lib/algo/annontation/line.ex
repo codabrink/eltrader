@@ -22,12 +22,16 @@ defmodule Line do
     distance = min(abs(y - frame.high), abs(y - frame.low))
 
     cond do
-      distance < frame.close * 0.001 -> frame.index
-      true -> relevant_until(line, tail, index)
+      Util.between?(y, frame.high, frame.low) ||
+          distance < frame.close * 0.001 ->
+        frame.index
+
+      true ->
+        relevant_until(line, tail, index)
     end
   end
 
-  def new(frame, %Point{} = sp1, %Point{} = sp2) do
+  def new(mframe, %Point{} = sp1, %Point{} = sp2) do
     angle = Topo.angle(sp1.coords, sp2.coords)
     slope = calc_slope(sp1.coords, sp2.coords)
 
@@ -40,7 +44,7 @@ defmodule Line do
       source_frames: [sp1.frame, sp2.frame]
     }
 
-    p2x = relevant_until(line, frame.before, 0)
+    p2x = relevant_until(line, mframe.before, 0)
     p2 = Topo.x_translate(sp1.coords, p2x - sp1.x, angle)
 
     line = %{
@@ -51,8 +55,8 @@ defmodule Line do
 
     %{
       line
-      | crosses: Line.Cross.collect_crosses(line, frame.before),
-        respect: calc_respect(line, frame)
+      | crosses: Line.Cross.collect_crosses(line, mframe.before),
+        respect: calc_respect(line, mframe)
     }
   end
 
