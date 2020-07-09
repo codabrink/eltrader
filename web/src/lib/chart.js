@@ -24,8 +24,11 @@ export function drawChart(data) {
 
   const { w, h } = getWH()
 
-  const svg = d3
-    .select('#chart')
+  const svg = d3.select('#chart')
+
+  // clear the svg
+  svg.selectAll('*').remove()
+  svg
     .attr('width', w + margin.left + margin.right)
     .attr('height', h + margin.top + margin.bottom)
     .append('g')

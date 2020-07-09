@@ -79,6 +79,7 @@ export default function TrendLines({ svg, data, x, candles }) {
 }
 
 function addPoints(line) {
+  if (!Array.isArray(line.p1)) return
   let [x1, y1] = line.p1
   let [x2, y2] = line.p2
   let p1 = { x: x1, y: y1 }

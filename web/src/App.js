@@ -1,20 +1,30 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useLayoutEffect } from 'react'
 import * as chart from './lib/chart'
 import { Select } from './UI'
 
 function App() {
-  let [frames, setFrames] = useState([])
-  let [interval, setInterval] = useState("15m")
-  let [symbol, setSymbol] = useState("ADABTC")
+  let [data, setData] = useState()
+  let [interval, setInterval] = useState('15m')
+  let [symbol, setSymbol] = useState('BTCUSDT')
 
   useEffect(() => {
     fetch(`/prices?symbol=${symbol}&interval=${interval}`)
       .then((r) => r.json())
-      .then((frames) => {
-        setFrames(frames)
-        chart.drawChart(frames)
+      .then((data) => {
+        setData(data)
+        chart.drawChart(data)
       })
   }, [symbol, interval])
+
+  useEffect(() => {
+    function resized(e) {
+      if (!data) return
+      chart.drawChart(data)
+    }
+
+    window.addEventListener('resize', resized)
+    return () => window.removeEventListener('resize', resized)
+  }, [data])
 
   return (
     <>
@@ -33,7 +43,7 @@ function App() {
         />
       </div>
       <div id="chart-container" className="flex-grow w-full">
-        <svg id="chart" key={interval + symbol} />
+        <svg id="chart" />
       </div>
     </>
   )
