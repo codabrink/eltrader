@@ -5,7 +5,7 @@ import { Select } from './UI'
 function App() {
   let [frames, setFrames] = useState([])
   let [interval, setInterval] = useState("15m")
-  let [symbol, setSymbol] = useState("BTCUSDT")
+  let [symbol, setSymbol] = useState("ADABTC")
 
   useEffect(() => {
     fetch(`/prices?symbol=${symbol}&interval=${interval}`)
@@ -21,7 +21,7 @@ function App() {
       <div id="control-bar" className="p-3 flex">
         <Select
           label="Symbol"
-          options={['BTCUSDT']}
+          options={['BTCUSDT', 'ADABTC']}
           value={symbol}
           onChange={setSymbol}
         />
