@@ -23,22 +23,33 @@ defmodule TrendLine do
   def generate([sp | strong_points], frame),
     do: [create(sp, frame) | generate(strong_points, frame)]
 
-  def create(%Point{points_after: points} = sp, frame) do
+  def create(%Point{points_after: points} = sp, mframe) do
+    IO.puts("Why is this so slow?")
+
     %TrendLine{
-      lines: _create([], Enum.take(points, 15), sp, frame)
+      lines: _create([], sp, Enum.take(points, 15), mframe)
     }
   end
 
-  defp _create(lines, [], _, _), do: lines
+  defp _create(lines, _, [], _), do: lines
 
-  defp _create([], [p | points], sp, mframe),
-    do: _create([Line.new(mframe, sp, p)], points, sp, mframe)
+  defp _create([], sp, [p | points], mframe),
+    do: _create([Line.new(mframe, sp, p)], sp, points, mframe)
 
-  defp _create(lines, [p | points], sp, mframe) do
+  defp _create(lines, sp, [p | points], mframe) do
     [Line.new(mframe, sp, p) | lines]
     |> slope_increased_enough?(sp)
     |> crossed_on_next_frame?(sp, p, mframe)
-    |> _create(points, sp, mframe)
+    |> is_line_worthless_still?(p)
+    |> _create(sp, points, mframe)
+  end
+
+  # Don't keep the line if it goes nowhere
+  def is_line_worthless_still?([line | lines], %{x: px}) do
+    case elem(line.p2, 0) do
+      ^px -> lines
+      _ -> [line | lines]
+    end
   end
 
   def slope_increased_enough?([line, prev | lines], %{type: type} = sp) do

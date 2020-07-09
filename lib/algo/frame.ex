@@ -56,14 +56,23 @@ defmodule Frame do
 
   def complete([]), do: []
   def complete([frame]), do: [complete(frame)]
-  def complete([frame | frames]), do: [frame | complete(frames)]
+
+  def complete([frame | frames]) do
+    [frame | complete(frames)]
+  end
 
   def complete(frame) do
+    IO.puts("Completing frame #{frame.index}...")
+
+    {time, frame} = :timer.tc(fn -> generate_points(frame) end)
+    IO.puts("#{time}: Time to generate points")
+    {time, frame} = :timer.tc(fn -> generate_strong_points(frame) end)
+    IO.puts("#{time}: Time to generate strong points")
+    {time, frame} = :timer.tc(fn -> add_trend_lines(frame) end)
+    IO.puts("#{time}: Time to generate trend lines")
+    {time, frame} = :timer.tc(fn -> add_rsi(frame, 14) end)
+    IO.puts("#{time}: Time to generate RSI")
     frame
-    |> generate_points()
-    |> generate_strong_points()
-    |> add_trend_lines()
-    |> add_rsi(14)
   end
 
   def add_rsi(frame, width) do
