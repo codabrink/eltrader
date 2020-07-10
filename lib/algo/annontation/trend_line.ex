@@ -3,7 +3,7 @@ defmodule TrendLine do
   use Configurable,
     config: %{
       min_slope_delta: %R{
-        value: fn y -> y / 20 end
+        value: fn y -> y * 10000 end
       }
     }
 
@@ -43,7 +43,7 @@ defmodule TrendLine do
     [Line.new(mframe, sp, p) | lines]
     # |> slope_increased_enough?(sp)
     |> Enum.sort_by(& &1.slope)
-    |> crossed_on_next_frame?(sp, p, mframe)
+    # |> crossed_on_next_frame?(sp, p, mframe)
     |> is_line_worthless_still?(p)
     |> _create(sp, points, mframe)
   end
@@ -118,15 +118,15 @@ defmodule TrendLine do
     end
   end
 
-  defp crossed_on_next_frame?([line | lines], sp, p, mframe) do
+  defp crossed_on_next_frame?([line | lines], root, p, mframe) do
     cond do
-      closed_on?(line, sp.frame.next) ->
-        sp = Point.move_right(sp)
-        crossed_on_next_frame?([Line.new(mframe, sp, p) | lines], sp, p, mframe)
+      closed_on?(line, root.frame.next) ->
+        root = Point.move_right(root)
+        crossed_on_next_frame?([Line.new(mframe, root, p) | lines], root, p, mframe)
 
       closed_on?(line, p.frame.next) ->
         p = Point.move_right(p)
-        crossed_on_next_frame?([Line.new(mframe, sp, p) | lines], sp, p, mframe)
+        crossed_on_next_frame?([Line.new(mframe, root, p) | lines], root, p, mframe)
 
       true ->
         [line | lines]
