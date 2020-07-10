@@ -82,7 +82,7 @@ function App() {
       </div>
       <div className="absolute bottom-0 right-0 flex">
         {candles.map((c) => (
-          <CandleDetail candle={c} />
+          <CandleDetail key={c.index} candle={c} />
         ))}
       </div>
     </>
