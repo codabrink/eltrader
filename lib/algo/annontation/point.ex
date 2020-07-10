@@ -1,5 +1,5 @@
 defmodule Point do
-  @ignore [:frame, :prev, :prev_top, :prev_bottom, :points_after, :all_points_after]
+  @ignore [:frame, :prev, :prev_top, :prev_bottom, :points_after_of_type, :points_after]
   @derive {Jason.Encoder, except: @ignore}
   @derive {Inspect, except: @ignore}
 
@@ -7,7 +7,8 @@ defmodule Point do
     :type,
     :frame,
     :points_after,
-    :all_points_after,
+    :points_after_of_type,
+    :importance,
     :prev,
     :prev_bottom,
     :prev_top,
@@ -74,7 +75,12 @@ defmodule Point do
       prev_top: payload.prev_top,
       prev_bottom: payload.prev_bottom,
       prev: payload.prev,
-      type: type
+      type: type,
+      importance:
+        case type do
+          :bottom -> elem(frame.importance, 0)
+          :top -> elem(frame.importance, 1)
+        end
     }
 
     {point,

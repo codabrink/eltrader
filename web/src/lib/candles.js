@@ -44,7 +44,7 @@ export default function candles({ svg, data, x, setCandles }) {
     .attr('x2', (d) => x(d.index) - xBand.bandwidth() / 2)
     .attr('y1', (d) => y(d.high))
     .attr('y2', (d) => y(d.low))
-    .attr('stroke', (d) => (d.open === d.close ? 'white' : d.open > d.close ? 'red' : 'green'))
+    .attr('stroke', (d) => (d.open > d.close ? 'red' : 'green'))
 
   let addReversals = (type) => {
     let _frames = _.filter(frames, (f) => f[`${type}_reversal`])

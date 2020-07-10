@@ -4,12 +4,7 @@ defmodule Frame do
   @derive {Inspect, except: @ignore}
 
   use Configurable,
-    config: %{
-      frame_width: %R{
-        range: 100..300,
-        value: 100
-      }
-    }
+    config: %{}
 
   defstruct [
     :open_time,
@@ -17,6 +12,7 @@ defmodule Frame do
     :high,
     :low,
     :close,
+    :all,
     :price_average,
     :volume,
     :asset_volume,
@@ -128,7 +124,7 @@ defmodule Frame do
   def dominion([frame | frames], mframe) do
     db = dominion(frame.low, frame.before, frame.after, :bottom, 0)
     dt = dominion(frame.high, frame.before, frame.after, :top, 0)
-    recentness = frame.index / mframe.index * 2
+    recentness = frame.index / mframe.index * 7
 
     [
       %Frame{
@@ -139,6 +135,8 @@ defmodule Frame do
       | dominion(frames, mframe)
     ]
   end
+
+  def dominion(y, _, [%{high: ny} | _], _, dist) when y === ny, do: dist
 
   def dominion(y, [%{high: py} | _], [%{high: ny} | _], :top, dist) when py > y or ny > y,
     do: dist

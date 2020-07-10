@@ -40,7 +40,7 @@ export default function TrendLines({ svg, data, x, candles }) {
     .attr('y1', (d) => y(d.p1.y))
     .attr('y2', (d) => y(d.p2.y))
     .attr('stroke', () => rnd(colors))
-    .attr('stroke-width', 2)
+    .attr('stroke-width', 1)
     .on('click', (d) => console.log(d))
 
   let svgBottomLines = svg
@@ -54,7 +54,7 @@ export default function TrendLines({ svg, data, x, candles }) {
     .attr('y1', (d) => y(d.p1.y))
     .attr('y2', (d) => y(d.p2.y))
     .attr('stroke', (d) => rnd(colors))
-    .attr('stroke-width', 2)
+    .attr('stroke-width', 1)
     .on('click', (d) => console.log(d))
 
   function zoomed({ xz }) {

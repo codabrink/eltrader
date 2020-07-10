@@ -4,7 +4,7 @@ defmodule StrongPoint do
       percent: %R{
         range: 1..10,
         denominator: 100,
-        value: 0.02
+        value: 0.01
       }
     }
 
@@ -19,8 +19,8 @@ defmodule StrongPoint do
     [
       %{
         sp
-        | all_points_after: points_after,
-          points_after: Enum.filter(points_after, &(&1.type === sp.type))
+        | points_after: points_after,
+          points_after_of_type: Enum.filter(points_after, &(&1.type === sp.type))
       }
       | _generate(strong_points, points_after)
     ]

@@ -6,6 +6,7 @@ defmodule Candle do
     high = String.to_float(Enum.at(rc, 2))
     low = String.to_float(Enum.at(rc, 3))
     close = String.to_float(Enum.at(rc, 4))
+    all = [open, high, low, close]
 
     # Consider making geom a square
 
@@ -15,6 +16,7 @@ defmodule Candle do
       high: high,
       low: low,
       close: close,
+      all: all,
       volume: String.to_float(Enum.at(rc, 5)),
       close_time: Enum.at(rc, 6),
       asset_volume: String.to_float(Enum.at(rc, 7)),

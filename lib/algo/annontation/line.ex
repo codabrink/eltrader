@@ -11,6 +11,7 @@ defmodule Line do
     :slope,
     :b,
     :respect,
+    :strength,
     crosses: [],
     source_frames: []
   ]
@@ -41,7 +42,8 @@ defmodule Line do
       p2: sp2.coords,
       slope: slope,
       b: calc_b(sp1.coords, slope),
-      source_frames: [sp1.frame, sp2.frame]
+      source_frames: [sp1.frame, sp2.frame],
+      strength: calc_strength(sp1, sp2)
     }
 
     p2x = relevant_until(line, mframe.before, 0)
@@ -53,22 +55,36 @@ defmodule Line do
         geom: %Geo.LineString{coordinates: [sp1.coords, p2.coordinates]}
     }
 
-    %{
+    line = %{
       line
       | crosses: Line.Cross.collect_crosses(line, mframe.before),
         respect: calc_respect(line, mframe)
     }
+
+    line
+  end
+
+  def calc_strength(sp1, sp2) do
+    # further apart points is more important
+    strength = abs(sp1.frame.index - sp2.frame.index)
+    # add in importance of the points themselves
+    strength + sp1.importance + sp2.importance
   end
 
   def calc_respect(line, frame) do
     %{p1: {p1x, _}} = line
 
-    frame.points
-    |> Enum.filter(fn %{coords: {x, _}} -> x > p1x end)
-    |> Enum.filter(fn %{coords: {x, y}} ->
-      Topo.distance(line.geom, {x, y}) < y * 0.01
-    end)
-    |> length()
+    points =
+      frame.points
+      |> Enum.filter(fn %{coords: {x, _}} -> x > p1x end)
+      # convert to distances
+      |> Enum.map(fn %{coords: {x, y}} -> {Topo.distance(line.geom, {x, y}), y} end)
+      # filter out distances that are too far
+      |> Enum.filter(fn {d, y} -> d < y * 0.01 end)
+
+    len = length(points)
+    # { num points within range, avg closeness of points within range }
+    {len, Enum.reduce(points, 0, fn {d, _}, acc -> acc + d end) / len}
   end
 
   # Calculate slope

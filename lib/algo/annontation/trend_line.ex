@@ -3,7 +3,7 @@ defmodule TrendLine do
   use Configurable,
     config: %{
       min_slope_delta: %R{
-        value: fn y -> y / 20000 end
+        value: fn y -> y / 20 end
       }
     }
 
@@ -23,9 +23,14 @@ defmodule TrendLine do
   def generate([sp | strong_points], frame),
     do: [create(sp, frame) | generate(strong_points, frame)]
 
-  def create(%Point{points_after: points} = sp, mframe) do
+  def create(%Point{points_after_of_type: points} = sp, mframe) do
+    lines =
+      _create([], sp, Enum.take(points, 15), mframe)
+      |> group_by_slope_delta()
+      |> merge_similar_slope_lines()
+
     %TrendLine{
-      lines: _create([], sp, Enum.take(points, 15), mframe)
+      lines: lines
     }
   end
 
@@ -36,7 +41,8 @@ defmodule TrendLine do
 
   defp _create(lines, sp, [p | points], mframe) do
     [Line.new(mframe, sp, p) | lines]
-    |> slope_increased_enough?(sp)
+    # |> slope_increased_enough?(sp)
+    |> Enum.sort_by(& &1.slope)
     |> crossed_on_next_frame?(sp, p, mframe)
     |> is_line_worthless_still?(p)
     |> _create(sp, points, mframe)
@@ -50,6 +56,44 @@ defmodule TrendLine do
     end
   end
 
+  def group_by_slope_delta([line | lines]), do: group_by_slope_delta(lines, [[line]])
+
+  def group_by_slope_delta([line1 | lines], [[line2 | rest] | groups]) do
+    delta = abs(line1.slope - line2.slope)
+
+    cond do
+      delta < elem(line1.p1, 1) * 0.0001 ->
+        group_by_slope_delta(lines, [[line1, line2 | rest] | groups])
+
+      true ->
+        group_by_slope_delta(lines, [[line1], [line2 | rest] | groups])
+    end
+  end
+
+  def group_by_slope_delta([], groups), do: groups
+
+  def merge_similar_slope_lines([], %Line{} = preferred_line), do: preferred_line
+
+  def merge_similar_slope_lines([%Line{} = line | lines], preferred_line) do
+    {r1n, r1d} = line.respect
+    {r2n, r2d} = preferred_line.respect
+
+    cond do
+      r1n > r2n or
+          (r1n === r2n and r1d < r2d) ->
+        merge_similar_slope_lines(lines, line)
+
+      true ->
+        merge_similar_slope_lines(lines, preferred_line)
+    end
+  end
+
+  def merge_similar_slope_lines([]), do: []
+
+  def merge_similar_slope_lines([[line | lines] | groups]) do
+    [merge_similar_slope_lines(lines, line) | merge_similar_slope_lines(groups)]
+  end
+
   def slope_increased_enough?([line, prev | lines], %{type: type} = sp) do
     delta = abs(line.slope - prev.slope)
     min_slope_delta = config(:min_slope_delta).(elem(line.p1, 1))
@@ -61,17 +105,16 @@ defmodule TrendLine do
           Util.between?(Line.y_at(prev, sp.frame.index), sp.frame.open, sp.frame.next.close) ->
             [line | lines]
 
-          # closed_on?(prev, sp.frame) ->
           true ->
             [prev | lines]
         end
 
-      (type === :top && line.slope > prev.slope) ||
-          (type === :bottom && line.slope < prev.slope) ->
-        [line, prev | lines]
+      # (type === :top && line.slope > prev.slope) ||
+      # (type === :bottom && line.slope < prev.slope) ->
+      # [line, prev | lines]
 
       true ->
-        [prev | lines]
+        [line, prev | lines]
     end
   end
 
