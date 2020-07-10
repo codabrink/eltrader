@@ -16,9 +16,12 @@ defmodule Line.Cross do
   ]
 
   def collect_crosses(line, frames), do: _collect_crosses(line, frames, [])
-
-  @spec _collect_crosses(%Line{}, [%Frame{}], [%Line.Cross{}]) :: [%Line.Cross{}]
   defp _collect_crosses(_, [], crosses), do: crosses
+
+  # ignore the crosses that happened before the line was created
+  defp _collect_crosses(%{source_frames: [_, %{index: i1}]}, [%{index: i2} | _], crosses)
+       when i2 <= i1,
+       do: crosses
 
   defp _collect_crosses(line, [frame | tail], crosses) do
     dist = Topo.distance(line.geom, frame.stem_geom)
@@ -31,8 +34,6 @@ defmodule Line.Cross do
     end
   end
 
-  @spec collect_crossing_frames(%Line{}, [%Frame{}], [%Frame{}], [%Line.Cross{}]) ::
-          [%Line.Cross{}]
   def collect_crossing_frames(line, [], crossing_frames, crosses),
     do: _collect_crosses(line, [], [create(line, crossing_frames) | crosses])
 

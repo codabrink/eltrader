@@ -30,7 +30,8 @@ defmodule Algo do
 
     frames =
       to_frames(frames, 0, nil)
-      |> Frame.merge_dominion()
+      |> double_link()
+      |> (&Frame.dominion(&1, List.last(&1))).()
       |> double_link()
 
     frames = Frame.complete(frames)

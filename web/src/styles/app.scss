@@ -1,4 +1,6 @@
-html, body, #root {
+html,
+body,
+#root {
   box-sizing: border-box;
   height: 100%;
   margin: 0;
@@ -12,4 +14,11 @@ html, body, #root {
 
 .tooltip {
   position: absolute;
+}
+
+.candle {
+  cursor: pointer;
+  &:hover {
+    stroke: black;
+  }
 }

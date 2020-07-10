@@ -1,5 +1,3 @@
-import { cross } from 'd3'
-
 const arrowOffset = 0.2
 
 export default function TrendLineCrosses({ svg, data, x, candles }) {
@@ -54,4 +52,3 @@ export default function TrendLineCrosses({ svg, data, x, candles }) {
 
   return { zoomed, zoomend }
 }
-

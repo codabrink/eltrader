@@ -23,37 +23,37 @@ defmodule Point do
 
   use Configurable,
     config: %{
-      population: %R{
+      percent: %R{
         range: 5..15,
-        value: 10
+        denominator: 100,
+        value: 0.15
       }
     }
 
-  def generate(frame, population \\ nil) do
-    frames = frame.before
-    population = floor(population || config(:population) / 100 * length(frames))
+  def generate(mframe), do: generate(mframe.before, :dominion, config(:percent))
 
-    bottom_points =
-      frames
-      |> Enum.sort(fn f1, f2 -> f1.bottom_dominion >= f2.bottom_dominion end)
-      |> Enum.slice(0..population)
+  def generate(frames, field, pct) do
+    len = floor(pct * length(frames))
+
+    bottom =
+      Enum.sort_by(frames, fn f -> elem(Map.get(f, field), 0) end, :desc)
+      |> Enum.slice(0..len)
       |> Enum.map(fn f -> {:bottom, f} end)
 
-    top_points =
-      frames
-      |> Enum.sort(fn f1, f2 -> f1.top_dominion >= f2.top_dominion end)
-      |> Enum.slice(0..population)
+    top =
+      Enum.sort_by(frames, fn f -> elem(Map.get(f, field), 1) end, :desc)
+      |> Enum.slice(0..len)
       |> Enum.map(fn f -> {:top, f} end)
 
-    (bottom_points ++ top_points)
-    |> Enum.sort(fn {_, f1}, {_, f2} -> f1.open_time <= f2.open_time end)
+    (bottom ++ top)
+    |> Enum.sort_by(&elem(&1, 1).index)
     |> _generate(%Payload{})
     |> Enum.reverse()
   end
 
-  defp _generate([], payload), do: payload.generated
+  def _generate([], payload), do: payload.generated
 
-  defp _generate([{type, frame} | points], payload) do
+  def _generate([{type, frame} | points], payload) do
     {_, payload} = create({type, frame}, payload)
     _generate(points, payload)
   end
@@ -61,8 +61,8 @@ defmodule Point do
   def create({type, frame}, payload) do
     {y, strength, prev_type} =
       case type do
-        :bottom -> {frame.low, frame.bottom_dominion, :prev_bottom}
-        :top -> {frame.high, frame.top_dominion, :prev_top}
+        :bottom -> {frame.low, elem(frame.dominion, 0), :prev_bottom}
+        :top -> {frame.high, elem(frame.dominion, 1), :prev_top}
       end
 
     point = %Point{

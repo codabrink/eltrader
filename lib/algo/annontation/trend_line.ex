@@ -3,7 +3,7 @@ defmodule TrendLine do
   use Configurable,
     config: %{
       min_slope_delta: %R{
-        value: fn y -> y / 200_000 end
+        value: fn y -> y / 20000 end
       }
     }
 
@@ -51,7 +51,7 @@ defmodule TrendLine do
   end
 
   def slope_increased_enough?([line, prev | lines], %{type: type} = sp) do
-    delta = abs(line.angle - prev.angle)
+    delta = abs(line.slope - prev.slope)
     min_slope_delta = config(:min_slope_delta).(elem(line.p1, 1))
 
     cond do

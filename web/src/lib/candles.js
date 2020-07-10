@@ -2,10 +2,9 @@ import * as d3 from 'd3'
 import _ from 'lodash'
 import { getWH } from './chart'
 
-export default function candles({ svg, data, x }) {
+export default function candles({ svg, data, x, setCandles }) {
   let { frames } = data
 
-  let tooltipDiv = d3.select('body').append('div').attr('class', 'tooltip').style('opacity', 0)
   let lows = frames.map((f) => f.low)
   let highs = frames.map((f) => f.high)
   let { w, h } = getWH()
@@ -30,9 +29,10 @@ export default function candles({ svg, data, x }) {
     .attr('width', xBand.bandwidth())
     .attr('height', (d) => (d.open === d.close ? 1 : y(Math.min(d.open, d.close)) - y(Math.max(d.open, d.close))))
     .attr('fill', (d) => (d.open > d.close ? 'red' : 'green'))
-    .on('mouseover', (d) => candleMouseover(tooltipDiv, d))
-    .on('mouseout', (d) => candleMouseout(tooltipDiv, d))
-    .on('click', (d) => console.log(d))
+    .on('click', (d) => setCandles([d], d3.event.shiftKey))
+  // .on('mouseover', (d) => candleMouseover(tooltipDiv, d))
+  // .on('mouseout', (d) => candleMouseout(tooltipDiv, d))
+  // .on('click', (d) => console.log(d))
 
   let stems = svg
     .selectAll('.stem')

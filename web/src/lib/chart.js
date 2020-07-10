@@ -3,6 +3,7 @@ import _ from 'lodash'
 import Candles from './candles'
 import TrendLines from './trend_lines'
 import TrendLineCrosses from './trend_line_crosses'
+import StrongPoints from './strong_points'
 
 // const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
@@ -15,7 +16,7 @@ export function getWH() {
   return { w, h }
 }
 
-export function drawChart(data) {
+export function drawChart({ data, setCandles }) {
   console.log(data)
   let { frames } = data
   console.log(frames[frames.length - 1])
@@ -24,11 +25,11 @@ export function drawChart(data) {
 
   const { w, h } = getWH()
 
-  const svg = d3.select('#chart')
+  let svg = d3.select('#chart')
 
   // clear the svg
   svg.selectAll('*').remove()
-  svg
+  svg = svg
     .attr('width', w + margin.left + margin.right)
     .attr('height', h + margin.top + margin.bottom)
     .append('g')
@@ -71,12 +72,14 @@ export function drawChart(data) {
 
   var chartBody = svg.append('g').attr('class', 'chartBody').attr('clip-path', 'url(#clip)')
   // indicators.push(Momentum({ svg: chartBody, frames, x }))
-  let candles = Candles({ svg: chartBody, data, x })
+  let candles = Candles({ svg: chartBody, data, x, setCandles })
   indicators.push(candles)
   let trendLines = TrendLines({ svg: chartBody, data, candles, x })
   indicators.push(trendLines)
   let trendLineCrosses = TrendLineCrosses({ svg: chartBody, data, candles, x })
   indicators.push(trendLineCrosses)
+  let strongPoints = StrongPoints({ svg: chartBody, data, candles, x })
+  indicators.push(strongPoints)
 
   svg.append('defs').append('clipPath').attr('id', 'clip').append('rect').attr('width', w).attr('height', h)
 

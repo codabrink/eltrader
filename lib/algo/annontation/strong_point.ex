@@ -1,20 +1,19 @@
 defmodule StrongPoint do
   use Configurable,
     config: %{
-      population: %R{
+      percent: %R{
         range: 1..10,
-        value: 3
+        denominator: 100,
+        value: 0.02
       }
     }
 
-  def generate(frame) do
-    Point.generate(frame, config(:population))
-    |> generate(frame.points)
-  end
+  def generate(mframe),
+    do: Point.generate(mframe.before, :importance, config(:percent)) |> _generate(mframe.points)
 
-  def generate([], _), do: []
+  defp _generate([], _), do: []
 
-  def generate([sp | strong_points], points_after) do
+  defp _generate([sp | strong_points], points_after) do
     points_after = points_after(sp.x, points_after)
 
     [
@@ -23,7 +22,7 @@ defmodule StrongPoint do
         | all_points_after: points_after,
           points_after: Enum.filter(points_after, &(&1.type === sp.type))
       }
-      | generate(strong_points, points_after)
+      | _generate(strong_points, points_after)
     ]
   end
 

@@ -1,28 +1,52 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useCallback } from 'react'
 import * as chart from './lib/chart'
 import { Select } from './UI'
 import queryString from 'query-string'
+import CandleDetail from './lib/candle_detail'
+
+function setSearch(search) {
+  window.history.replaceState(null, '', `${window.location.pathname}?${queryString.stringify(search)}`)
+}
 
 function App() {
   let search = queryString.parse(window.location.search)
 
+  let [candles, setCandles] = useState([])
+
   let [data, setData] = useState()
   let [interval, setInterval] = useState(search.interval || '15m')
   let [symbol, setSymbol] = useState(search.symbol || 'BTCUSDT')
+
+  let setCandlesCallback = useCallback(
+    (_candles, append) => {
+      if (append) _candles = [..._candles, ...candles]
+      setCandles(_candles)
+    },
+    [candles]
+  )
+
+  let drawChart = (_data) => {
+    chart.drawChart({
+      data: _data,
+      setCandles: setCandlesCallback,
+    })
+  }
 
   useEffect(() => {
     fetch(`/prices?symbol=${symbol}&interval=${interval}`)
       .then((r) => r.json())
       .then((data) => {
         setData(data)
-        chart.drawChart(data)
+        let lastCandle = data.frames[data.frames.length - 1]
+        setCandles([lastCandle])
+        drawChart(data)
       })
   }, [symbol, interval])
 
   useEffect(() => {
-    function resized(e) {
+    function resized() {
       if (!data) return
-      chart.drawChart(data)
+      drawChart(data)
     }
 
     window.addEventListener('resize', resized)
@@ -39,7 +63,7 @@ function App() {
           onChange={(symbol) => {
             setSymbol(symbol)
             search.symbol = symbol
-            window.location.search = queryString.stringify(search)
+            setSearch(search)
           }}
         />
         <Select
@@ -49,12 +73,17 @@ function App() {
           onChange={(interval) => {
             setInterval(interval)
             search.interval = interval
-            window.location.search = queryString.stringify(search)
+            setSearch(search)
           }}
         />
       </div>
       <div id="chart-container" className="flex-grow w-full">
         <svg id="chart" />
+      </div>
+      <div className="absolute bottom-0 right-0 flex">
+        {candles.map((c) => (
+          <CandleDetail candle={c} />
+        ))}
       </div>
     </>
   )

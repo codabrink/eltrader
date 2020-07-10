@@ -28,10 +28,12 @@ defmodule Frame do
     :momentum,
     :prev,
     :next,
-    :bottom_dominion,
-    :top_dominion,
+    :dominion,
+    :importance,
     :stake,
     :rsi_14,
+    :_before,
+    :_after,
     before: [],
     after: [],
     points: [],
@@ -72,7 +74,8 @@ defmodule Frame do
     IO.puts("#{time}: Time to generate trend lines")
     {time, frame} = :timer.tc(fn -> add_rsi(frame, 14) end)
     IO.puts("#{time}: Time to generate RSI")
-    frame
+
+    %{frame | _before: frame.before, _after: frame.after}
   end
 
   def add_rsi(frame, width) do
@@ -91,7 +94,6 @@ defmodule Frame do
     %{frame | trend_lines: TrendLine.generate(frame)}
   end
 
-  @spec add_votes(%Frame{}) :: %Frame{}
   def add_votes(frame) do
     votes =
       [Decision.TrendReclaim, Decision.TrendBreak]
@@ -121,38 +123,31 @@ defmodule Frame do
     Enum.slice(frames, Enum.max([index - n, 0]), n * 2 + 1)
   end
 
-  def merge_dominion(frames), do: merge_dominion(frames, frames)
-  def merge_dominion([], _), do: []
+  def dominion([], _), do: []
 
-  def merge_dominion([frame | tail], frames) do
-    {first, last} = Util.split_around(frames, frame.index)
+  def dominion([frame | frames], mframe) do
+    db = dominion(frame.low, frame.before, frame.after, :bottom, 0)
+    dt = dominion(frame.high, frame.before, frame.after, :top, 0)
+    recentness = frame.index / mframe.index * 2
 
     [
       %Frame{
         frame
-        | top_dominion: peak_dominion(frame, {first, last}, :top, 0),
-          bottom_dominion: peak_dominion(frame, {first, last}, :bottom, 0)
+        | dominion: {db, dt},
+          importance: {db + recentness, dt + recentness}
       }
-      | merge_dominion(tail, frames)
+      | dominion(frames, mframe)
     ]
   end
 
-  def peak_dominion(_, {[], []}, _, dist), do: dist
+  def dominion(y, [%{high: py} | _], [%{high: ny} | _], :top, dist) when py > y or ny > y,
+    do: dist
 
-  def peak_dominion(frame, {first, last}, type, dist) do
-    {f, first_tail} = safe_match(first)
-    {l, last_tail} = safe_match(last)
+  def dominion(y, [%{low: py} | _], [%{low: ny} | _], :bottom, dist) when py < y or ny < y,
+    do: dist
 
-    cond do
-      peak_defeated(type, frame, f) || peak_defeated(type, frame, l) -> dist
-      true -> peak_dominion(frame, {first_tail, last_tail}, type, dist + 1)
-    end
-  end
+  def dominion(y, [_ | ptail], [_ | ntail], type, dist),
+    do: dominion(y, ptail, ntail, type, dist + 1)
 
-  defp peak_defeated(_, _, nil), do: false
-  defp peak_defeated(:top, frame, f), do: f.high > frame.high
-  defp peak_defeated(:bottom, frame, f), do: f.low < frame.low
-
-  defp safe_match([]), do: {nil, []}
-  defp safe_match([head | tail]), do: {head, tail}
+  def dominion(_, _, _, _, dist), do: dist
 end
