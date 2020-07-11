@@ -1,11 +1,14 @@
 import React from 'react'
 
-export default function CandleDetail({ candle }) {
+export default function CandleDetail({ candle, onClose }) {
   if (!candle) return null
 
   return (
     <div className="bg-white p-4">
-      <h1>Candle</h1>
+      <div className="absolute top-0 right-0 p-2 cursor-pointer" onClick={onClose}>
+        X
+      </div>
+      <h1>Candle #{candle.index}</h1>
       <table className="text-left">
         <tbody>
           <tr>

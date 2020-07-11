@@ -24,7 +24,7 @@ defmodule Line do
 
     cond do
       Util.between?(y, frame.high, frame.low) ||
-          distance < frame.close * 0.001 ->
+          distance < frame.close * 0.01 ->
         frame.index
 
       true ->
@@ -75,7 +75,7 @@ defmodule Line do
     %{p1: {p1x, _}} = line
 
     points =
-      frame.points
+      frame.points.all
       |> Enum.filter(fn %{coords: {x, _}} -> x > p1x end)
       # convert to distances
       |> Enum.map(fn %{coords: {x, y}} -> {Topo.distance(line.geom, {x, y}), y} end)
@@ -84,7 +84,10 @@ defmodule Line do
 
     len = length(points)
     # { num points within range, avg closeness of points within range }
-    {len, Enum.reduce(points, 0, fn {d, _}, acc -> acc + d end) / len}
+    case len do
+      0 -> 0
+      _ -> {len, Enum.reduce(points, 0, fn {d, _}, acc -> acc + d end) / len}
+    end
   end
 
   # Calculate slope

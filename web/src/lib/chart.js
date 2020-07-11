@@ -17,7 +17,6 @@ export function getWH() {
 }
 
 export function drawChart({ data, setCandles }) {
-  console.log(data)
   let { frames } = data
   console.log(frames[frames.length - 1])
 
@@ -76,8 +75,8 @@ export function drawChart({ data, setCandles }) {
   indicators.push(candles)
   let trendLines = TrendLines({ svg: chartBody, data, candles, x })
   indicators.push(trendLines)
-  let trendLineCrosses = TrendLineCrosses({ svg: chartBody, data, candles, x })
-  indicators.push(trendLineCrosses)
+  // let trendLineCrosses = TrendLineCrosses({ svg: chartBody, data, candles, x })
+  // indicators.push(trendLineCrosses)
   let strongPoints = StrongPoints({ svg: chartBody, data, candles, x })
   indicators.push(strongPoints)
 

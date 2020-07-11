@@ -2,30 +2,29 @@ defmodule TrendLine do
   @derive Jason.Encoder
   use Configurable,
     config: %{
-      min_slope_delta: %R{
-        value: fn y -> y * 10000 end
+      min_angle_delta: %R{
+        value: :math.pi() / 32
       }
     }
 
   defstruct lines: []
 
   def generate(%Frame{} = frame) do
-    strong_points = frame.strong_points
-
     %{
-      bottom: generate(Enum.filter(strong_points, &(&1.type === :bottom)), frame),
-      top: generate(Enum.filter(strong_points, &(&1.type === :top)), frame)
+      bottom: generate(frame.strong_points.bottom, frame),
+      top: generate(frame.strong_points.top, frame)
     }
   end
 
   def generate([], _), do: []
 
-  def generate([sp | strong_points], frame),
-    do: [create(sp, frame) | generate(strong_points, frame)]
+  def generate([root | roots], frame),
+    do: [create(root, frame) | generate(roots, frame)]
 
-  def create(%Point{points_after_of_type: points} = sp, mframe) do
+  def create(%Point{points_after_of_type: points} = root, mframe) do
     lines =
-      _create([], sp, Enum.take(points, 15), mframe)
+      _create([], root, Enum.take(points, 30), mframe)
+      |> Enum.sort_by(& &1.angle, :asc)
       |> group_by_slope_delta()
       |> merge_similar_slope_lines()
 
@@ -36,33 +35,37 @@ defmodule TrendLine do
 
   defp _create(lines, _, [], _), do: lines
 
-  defp _create([], sp, [p | points], mframe),
-    do: _create([Line.new(mframe, sp, p)], sp, points, mframe)
+  defp _create([], root, [p | points], mframe),
+    do: _create([Line.new(mframe, root, p)], root, points, mframe)
 
-  defp _create(lines, sp, [p | points], mframe) do
-    [Line.new(mframe, sp, p) | lines]
-    # |> slope_increased_enough?(sp)
-    |> Enum.sort_by(& &1.slope)
-    # |> crossed_on_next_frame?(sp, p, mframe)
-    |> is_line_worthless_still?(p)
-    |> _create(sp, points, mframe)
+  defp _create(lines, root, [p | points], mframe) do
+    line = Line.new(mframe, root, p)
+
+    #  crossed_on_next_frame?(root, p, mframe)
+    with {:ok, line} <- is_line_worthless_still?(line, lines, p) do
+      [line | lines]
+    else
+      _ -> lines
+    end
+    |> _create(root, points, mframe)
   end
 
   # Don't keep the line if it goes nowhere
-  def is_line_worthless_still?([line | lines], %{x: px}) do
+  def is_line_worthless_still?(line, _, %{x: px}) do
     case elem(line.p2, 0) do
-      ^px -> lines
-      _ -> [line | lines]
+      ^px -> {:fail}
+      _ -> {:ok, line}
     end
   end
 
+  def group_by_slope_delta([]), do: []
   def group_by_slope_delta([line | lines]), do: group_by_slope_delta(lines, [[line]])
 
   def group_by_slope_delta([line1 | lines], [[line2 | rest] | groups]) do
-    delta = abs(line1.slope - line2.slope)
+    delta = abs(line1.angle - line2.angle)
 
     cond do
-      delta < elem(line1.p1, 1) * 0.0001 ->
+      delta < config(:min_angle_delta) ->
         group_by_slope_delta(lines, [[line1, line2 | rest] | groups])
 
       true ->
@@ -94,27 +97,29 @@ defmodule TrendLine do
     [merge_similar_slope_lines(lines, line) | merge_similar_slope_lines(groups)]
   end
 
-  def slope_increased_enough?([line, prev | lines], %{type: type} = sp) do
-    delta = abs(line.slope - prev.slope)
-    min_slope_delta = config(:min_slope_delta).(elem(line.p1, 1))
+  def angle_increased_enough?(line, [prev | _], %{type: type} = root) do
+    delta = abs(line.angle - prev.angle)
+    min_angle_delta = config(:min_angle_delta)
+
+    # if root.frame.index == 265, do: IO.inspect(delta)
 
     cond do
       # If the angle has not changed enough
-      delta < min_slope_delta ->
+      delta < min_angle_delta ->
         cond do
-          Util.between?(Line.y_at(prev, sp.frame.index), sp.frame.open, sp.frame.next.close) ->
-            [line | lines]
+          # Util.between?(Line.y_at(prev, root.frame.index), root.frame.open, root.frame.next.close) ->
+          # {:ok, line}
 
           true ->
-            [prev | lines]
+            {:fail}
         end
 
-      # (type === :top && line.slope > prev.slope) ||
-      # (type === :bottom && line.slope < prev.slope) ->
-      # [line, prev | lines]
+      (type === :top && line.slope > prev.slope) ||
+          (type === :bottom && line.slope < prev.slope) ->
+        {:ok, line}
 
       true ->
-        [line, prev | lines]
+        {:ok, line}
     end
   end
 

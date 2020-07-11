@@ -37,8 +37,6 @@ function App() {
       .then((r) => r.json())
       .then((data) => {
         setData(data)
-        let lastCandle = data.frames[data.frames.length - 1]
-        setCandles([lastCandle])
         drawChart(data)
       })
   }, [symbol, interval])
@@ -82,7 +80,13 @@ function App() {
       </div>
       <div className="absolute bottom-0 right-0 flex">
         {candles.map((c) => (
-          <CandleDetail key={c.index} candle={c} />
+          <CandleDetail
+            key={c.index}
+            candle={c}
+            onClose={() => {
+              setCandles(candles.filter((cc) => cc != c))
+            }}
+          />
         ))}
       </div>
     </>

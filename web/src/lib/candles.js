@@ -52,7 +52,7 @@ export default function candles({ svg, data, x, setCandles }) {
   function zoomend({ frames }) {
     let min = d3.min(frames, (f) => f.low)
     let max = d3.max(frames, (f) => f.high)
-    let buffer = Math.floor((max - min) * 0.1)
+    let buffer = (max - min) * 0.05
     y.domain([min - buffer, max + buffer])
 
     candles

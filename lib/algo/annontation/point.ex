@@ -18,8 +18,12 @@ defmodule Point do
     :y
   ]
 
-  defmodule Payload do
+  defmodule Refs do
     defstruct [:prev, :prev_top, :prev_bottom, generated: []]
+  end
+
+  defmodule Payload do
+    defstruct [:all, :top, :bottom, :top_by_dominion, :bottom_by_dominion]
   end
 
   use Configurable,
@@ -37,34 +41,48 @@ defmodule Point do
     len = floor(pct * length(frames))
 
     bottom =
-      Enum.sort_by(frames, fn f -> elem(Map.get(f, field), 0) end, :desc)
+      Enum.sort_by(frames, &elem(Map.get(&1, field), 0), :desc)
       |> Enum.slice(0..len)
       |> Enum.map(fn f -> {:bottom, f} end)
 
     top =
-      Enum.sort_by(frames, fn f -> elem(Map.get(f, field), 1) end, :desc)
+      Enum.sort_by(frames, &elem(Map.get(&1, field), 1), :desc)
       |> Enum.slice(0..len)
       |> Enum.map(fn f -> {:top, f} end)
 
-    (bottom ++ top)
-    |> Enum.sort_by(&elem(&1, 1).index)
-    |> _generate(%Payload{})
-    |> Enum.reverse()
+    points =
+      (bottom ++ top)
+      |> Enum.sort_by(&elem(&1, 1).index)
+      |> _generate(%Refs{})
+      |> Enum.reverse()
+
+    top = Enum.filter(points, &(&1.type === :top))
+    bottom = Enum.filter(points, &(&1.type === :bottom))
+
+    %Payload{
+      all: points,
+      top: top,
+      bottom: bottom,
+      bottom_by_dominion: Enum.sort_by(bottom, &elem(&1.frame.dominion, 0), :desc),
+      top_by_dominion: Enum.sort_by(top, &elem(&1.frame.dominion, 1), :desc)
+    }
   end
 
   def _generate([], payload), do: payload.generated
 
-  def _generate([{type, frame} | points], payload) do
-    {_, payload} = create({type, frame}, payload)
-    _generate(points, payload)
+  def _generate([{type, frame} | points], refs) do
+    {_, refs} = create({type, frame}, refs)
+    _generate(points, refs)
   end
 
-  def create({type, frame}, payload) do
+  def create({type, frame}, refs) do
     {y, strength, prev_type} =
       case type do
         :bottom -> {frame.low, elem(frame.dominion, 0), :prev_bottom}
         :top -> {frame.high, elem(frame.dominion, 1), :prev_top}
       end
+
+    points_after = Enum.reverse(refs.generated)
 
     point = %Point{
       frame: frame,
@@ -72,28 +90,30 @@ defmodule Point do
       y: y,
       coords: {frame.index, y},
       strength: strength,
-      prev_top: payload.prev_top,
-      prev_bottom: payload.prev_bottom,
-      prev: payload.prev,
+      prev_top: refs.prev_top,
+      prev_bottom: refs.prev_bottom,
+      prev: refs.prev,
       type: type,
       importance:
         case type do
           :bottom -> elem(frame.importance, 0)
           :top -> elem(frame.importance, 1)
-        end
+        end,
+      points_after: points_after,
+      points_after_of_type: Enum.filter(points_after, &(&1.type === type))
     }
 
     {point,
      %{
-       payload
+       refs
        | prev_type => point,
          prev: point,
-         generated: [point | payload.generated]
+         generated: [point | refs.generated]
      }}
   end
 
   def move_right(point) do
-    create({point.type, point.frame.next}, %Payload{
+    create({point.type, point.frame.next}, %Refs{
       prev: point.prev,
       prev_top: point.prev_top,
       prev_bottom: point.prev_bottom
