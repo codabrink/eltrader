@@ -39,7 +39,7 @@ function App() {
         setData(data)
         drawChart(data)
       })
-  }, [symbol, interval, drawChart])
+  }, [symbol, interval])
 
   useEffect(() => {
     function resized() {
@@ -49,7 +49,7 @@ function App() {
 
     window.addEventListener('resize', resized)
     return () => window.removeEventListener('resize', resized)
-  }, [data, drawChart])
+  }, [data])
 
   return (
     <>
