@@ -4,7 +4,6 @@ end
 
 defmodule Configurable do
   @type module_config :: map()
-  alias Trader.Cache
 
   defmacro __using__(opts) do
     config = Keyword.get(opts, :config, %{})

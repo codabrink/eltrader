@@ -1,5 +1,7 @@
 export default function StrongPoints({ svg, data, x, candles }) {
-  let { points } = data.frames[data.frames.length - 1]
+  let {
+    points: { all: points },
+  } = data.frames[data.frames.length - 1]
 
   let y = candles.getY()
 

@@ -28,13 +28,12 @@ defmodule Frame do
     :importance,
     :stake,
     :rsi_14,
+    :points,
     :_before,
     :_after,
     before: [],
     after: [],
-    points: [],
     trend_lines: [],
-    strong_points: [],
     votes: []
   ]
 
@@ -64,8 +63,6 @@ defmodule Frame do
 
     {time, frame} = :timer.tc(fn -> generate_points(frame) end)
     IO.puts("#{time}: Time to generate points")
-    {time, frame} = :timer.tc(fn -> generate_strong_points(frame) end)
-    IO.puts("#{time}: Time to generate strong points")
     {time, frame} = :timer.tc(fn -> add_trend_lines(frame) end)
     IO.puts("#{time}: Time to generate trend lines")
     {time, frame} = :timer.tc(fn -> add_rsi(frame, 14) end)
@@ -79,11 +76,17 @@ defmodule Frame do
   end
 
   def generate_points(frame) do
-    %{frame | points: Point.generate(frame)}
-  end
+    with {:ok, points} <- Point.generate(frame),
+         {:ok, strong_points} <- StrongPoint.generate(points) do
+      TestUtil.is_sorted(points, & &1.x)
 
-  def generate_strong_points(frame) do
-    %{frame | strong_points: StrongPoint.generate(frame)}
+      %{
+        frame
+        | points:
+            Point.link(points, strong_points, {[], []})
+            |> Point.group()
+      }
+    end
   end
 
   def add_trend_lines(frame) do

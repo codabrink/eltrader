@@ -4,10 +4,16 @@ defmodule StrongPoint do
       percent: %R{
         range: 1..10,
         denominator: 100,
-        value: 0.01
+        value: 0.1
       }
     }
 
-  def generate(mframe),
-    do: Point.generate(mframe.before, :importance, config(:percent))
+  def generate(points) do
+    TestUtil.is_sorted(points, & &1.x)
+
+    Enum.sort_by(points, & &1.frame.dominion, :desc)
+    |> Enum.take(floor(config(:percent) * length(points)))
+    |> Enum.sort_by(& &1.x)
+    |> (&{:ok, &1}).()
+  end
 end

@@ -69,6 +69,7 @@ defmodule Algo do
   end
 
   def quiet() do
+    TestUtil.enable()
     run()
     nil
   end

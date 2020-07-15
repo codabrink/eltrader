@@ -9,7 +9,7 @@ defmodule Trader do
         plug: Api.Endpoint,
         options: [port: Application.get_env(:trader, :port)]
       ),
-      Trader.Cache
+      Cache
     ]
 
     opts = [strategy: :one_for_one, name: Trader.Supervisor]

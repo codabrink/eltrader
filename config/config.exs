@@ -1,6 +1,6 @@
 use Mix.Config
 
-config :trader, Trader.Cache,
+config :trader, Cache,
   # 24 hrs
   gc_interval: 86_400
 

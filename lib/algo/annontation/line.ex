@@ -75,7 +75,7 @@ defmodule Line do
     %{p1: {p1x, _}} = line
 
     points =
-      frame.points.all
+      frame.points.all.all
       |> Enum.filter(fn %{coords: {x, _}} -> x > p1x end)
       # convert to distances
       |> Enum.map(fn %{coords: {x, y}} -> {Topo.distance(line.geom, {x, y}), y} end)

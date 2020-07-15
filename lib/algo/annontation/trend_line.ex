@@ -3,29 +3,43 @@ defmodule TrendLine do
   use Configurable,
     config: %{
       min_angle_delta: %R{
-        value: :math.pi() / 32
+        value: :math.pi() / 128
       }
     }
 
   defstruct lines: []
 
-  def generate(%Frame{} = frame) do
+  def generate(%{points: %{strong: %{bottom: bottom, top: top}}} = frame) do
+    # late_points = Enum.take(frame.points.all, -floor(length(frame.points.all) * 0.2))
+
+    late_strong_points_bottom = Enum.take(bottom, -4)
+    late_strong_points_top = Enum.take(top, -4)
+
     %{
-      bottom: generate(frame.strong_points.bottom, frame),
-      top: generate(frame.strong_points.top, frame)
+      bottom: generate(late_strong_points_bottom, frame),
+      top: generate(late_strong_points_top, frame),
+      strong_top: generate_strong(top, frame),
+      strong_bottom: generate_strong(bottom, frame)
     }
   end
 
+  def generate([%{points_after_of_type: points} = root | roots], frame),
+    do: [create(root, points, frame) | generate(roots, frame)]
+
   def generate([], _), do: []
 
-  def generate([root | roots], frame),
-    do: [create(root, frame) | generate(roots, frame)]
+  def generate_strong([%{strong_points_after_of_type: points} = root | roots], frame),
+    do: [create(root, points, frame) | generate_strong(roots, frame)]
 
-  def create(%Point{points_after_of_type: points} = root, mframe) do
+  def generate_strong([], _), do: []
+
+  def create(root, points, mframe) do
+    TestUtil.is_sorted(points, & &1.x)
+
     lines =
-      _create([], root, Enum.take(points, 30), mframe)
+      _create([], root, Enum.take(points, 10), mframe)
       |> Enum.sort_by(& &1.angle, :asc)
-      |> group_by_slope_delta()
+      |> group_by_angle_delta()
       |> merge_similar_slope_lines()
 
     %TrendLine{
@@ -58,22 +72,22 @@ defmodule TrendLine do
     end
   end
 
-  def group_by_slope_delta([]), do: []
-  def group_by_slope_delta([line | lines]), do: group_by_slope_delta(lines, [[line]])
+  def group_by_angle_delta([]), do: []
+  def group_by_angle_delta([line | lines]), do: group_by_angle_delta(lines, [[line]])
 
-  def group_by_slope_delta([line1 | lines], [[line2 | rest] | groups]) do
+  def group_by_angle_delta([line1 | lines], [[line2 | rest] | groups]) do
     delta = abs(line1.angle - line2.angle)
 
     cond do
       delta < config(:min_angle_delta) ->
-        group_by_slope_delta(lines, [[line1, line2 | rest] | groups])
+        group_by_angle_delta(lines, [[line1, line2 | rest] | groups])
 
       true ->
-        group_by_slope_delta(lines, [[line1], [line2 | rest] | groups])
+        group_by_angle_delta(lines, [[line1], [line2 | rest] | groups])
     end
   end
 
-  def group_by_slope_delta([], groups), do: groups
+  def group_by_angle_delta([], groups), do: groups
 
   def merge_similar_slope_lines([], %Line{} = preferred_line), do: preferred_line
 

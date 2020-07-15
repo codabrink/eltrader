@@ -39,7 +39,7 @@ function App() {
         setData(data)
         drawChart(data)
       })
-  }, [symbol, interval])
+  }, [symbol, interval, drawChart])
 
   useEffect(() => {
     function resized() {
@@ -49,7 +49,7 @@ function App() {
 
     window.addEventListener('resize', resized)
     return () => window.removeEventListener('resize', resized)
-  }, [data])
+  }, [data, drawChart])
 
   return (
     <>
@@ -84,7 +84,7 @@ function App() {
             key={c.index}
             candle={c}
             onClose={() => {
-              setCandles(candles.filter((cc) => cc != c))
+              setCandles(candles.filter((cc) => cc !== c))
             }}
           />
         ))}

@@ -10,11 +10,11 @@ defmodule Candles do
 
   def cache(symbol, interval) do
     read_cache_from_disk(symbol, interval)
-    Trader.Cache.get(cache_key(symbol, interval)) || []
+    Cache.get(cache_key(symbol, interval)) || []
   end
 
   def read_cache_from_disk(symbol, interval) do
-    unless Trader.Cache.has_key?(cache_key(symbol, interval)),
+    unless Cache.has_key?(cache_key(symbol, interval)),
       do: _read_cache_from_disk(symbol, interval)
   end
 
@@ -26,7 +26,7 @@ defmodule Candles do
         candles: group
       }
     end)
-    |> (&Trader.Cache.set(cache_key(symbol, interval), &1)).()
+    |> (&Cache.set(cache_key(symbol, interval), &1)).()
   end
 
   def write_cache_to_disk(cache, symbol, interval),
@@ -73,7 +73,7 @@ defmodule Candles do
       end)
 
     write_cache_to_disk(cache, symbol, interval)
-    Trader.Cache.set(cache_key(symbol, interval), cache)
+    Cache.set(cache_key(symbol, interval), cache)
   end
 
   def compile([u | unbuilt], step), do: compile(unbuilt, [u], step)

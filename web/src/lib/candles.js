@@ -1,5 +1,4 @@
 import * as d3 from 'd3'
-import _ from 'lodash'
 import { getWH } from './chart'
 
 export default function candles({ svg, data, x, setCandles }) {
