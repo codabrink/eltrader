@@ -121,13 +121,19 @@ defmodule Point do
     )
   end
 
-  def link(_, _, {linked_points, linked_strong_points}),
-    do: %{
-      all: linked_points,
-      strong: linked_strong_points
+  def link(_, _, {linked_points, linked_strong_points}) do
+    TestUtil.is_sorted(linked_points, & &1.x, :desc)
+    TestUtil.is_sorted(linked_strong_points, & &1.x, :desc)
+
+    %{
+      all: Enum.reverse(linked_points),
+      strong: Enum.reverse(linked_strong_points)
     }
+  end
 
   def group(%{all: all, strong: strong}) do
+    exclusive = all -- strong
+
     %{
       all: %Payload{
         all: all,
@@ -138,6 +144,9 @@ defmodule Point do
         all: strong,
         top: Enum.filter(strong, &(&1.type === :top)),
         bottom: Enum.filter(strong, &(&1.type === :bottom))
+      },
+      exclusive: %Payload{
+        all: exclusive
       }
     }
   end

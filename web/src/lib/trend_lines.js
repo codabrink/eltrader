@@ -6,73 +6,53 @@ function rnd(array) {
 
 export default function TrendLines({ svg, data, x, candles }) {
   let {
-    trend_lines: { top: topLines, bottom: bottomLines },
+    trend_lines: { top: topLines, bottom: bottomLines, strong_top: strongTop, strong_bottom: strongBottom },
   } = data.frames[data.frames.length - 1]
 
-  let _topLines = []
-  let _bottomLines = []
-
-  for (const trendLine of topLines) {
-    for (const line of trendLine.lines) {
-      addPoints(line)
-      _topLines.push(line)
+  const categories = [
+    { class: 'top', rawLines: topLines, lines: [] },
+    { class: 'bottom', rawLines: bottomLines, lines: [] },
+    { class: 'strongTop', rawLines: strongTop, lines: [] },
+    { class: 'strongBottom', rawLines: strongBottom, lines: [] },
+  ]
+  for (const category of categories) {
+    for (const trendLine of category.rawLines) {
+      for (const line of trendLine.lines) {
+        addPoints(line)
+        category.lines.push(line)
+      }
     }
   }
-  for (const trendLine of bottomLines) {
-    for (const line of trendLine.lines) {
-      addPoints(line)
-      _bottomLines.push(line)
-    }
-  }
-
-  // for (const line of bottomLines) addPoints(line)
 
   let y = candles.getY()
 
-  let svgTopLines = svg
-    .selectAll('.topline')
-    .data(_topLines)
-    .enter()
-    .append('line')
-    .attr('class', 'topline')
-    .attr('x1', (d) => x(d.p1.x))
-    .attr('x2', (d) => x(d.p2.x))
-    .attr('y1', (d) => y(d.p1.y))
-    .attr('y2', (d) => y(d.p2.y))
-    .attr('stroke', () => rnd(colors))
-    .attr('stroke-width', 1)
-    .on('click', (d) => console.log(d))
-
-  let svgBottomLines = svg
-    .selectAll('.bottomline')
-    .data(_bottomLines)
-    .enter()
-    .append('line')
-    .attr('class', 'bottomline')
-    .attr('x1', (d) => x(d.p1.x))
-    .attr('x2', (d) => x(d.p2.x))
-    .attr('y1', (d) => y(d.p1.y))
-    .attr('y2', (d) => y(d.p2.y))
-    .attr('stroke', (d) => rnd(colors))
-    .attr('stroke-width', 1)
-    .on('click', (d) => console.log(d))
+  for (const category of categories) {
+    category.svg = svg
+      .selectAll(`.${category.class}`)
+      .data(category.lines)
+      .enter()
+      .append('line')
+      .attr('class', category.class)
+      .attr('x1', (d) => x(d.p1.x))
+      .attr('x2', (d) => x(d.p2.x))
+      .attr('y1', (d) => y(d.p1.y))
+      .attr('y2', (d) => y(d.p2.y))
+      .attr('stroke', () => rnd(colors))
+      .attr('stroke-width', 1)
+  }
 
   function zoomed({ xz }) {
-    svgTopLines.attr('x1', (f) => xz(f.p1.x)).attr('x2', (f) => xz(f.p2.x))
-    svgBottomLines.attr('x1', (f) => xz(f.p1.x)).attr('x2', (f) => xz(f.p2.x))
+    for (const category of categories) category.svg.attr('x1', (f) => xz(f.p1.x)).attr('x2', (f) => xz(f.p2.x))
   }
 
   function zoomend() {
-    svgTopLines
-      .transition()
-      .duration(200)
-      .attr('y1', (f) => y(f.p1.y))
-      .attr('y2', (f) => y(f.p2.y))
-    svgBottomLines
-      .transition()
-      .duration(200)
-      .attr('y1', (f) => y(f.p1.y))
-      .attr('y2', (f) => y(f.p2.y))
+    for (const category of categories) {
+      category.svg
+        .transition()
+        .duration(200)
+        .attr('y1', (f) => y(f.p1.y))
+        .attr('y2', (f) => y(f.p2.y))
+    }
   }
 
   return { zoomed, zoomend }

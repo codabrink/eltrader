@@ -85,7 +85,7 @@ defmodule Line do
     len = length(points)
     # { num points within range, avg closeness of points within range }
     case len do
-      0 -> 0
+      0 -> {0, 0}
       _ -> {len, Enum.reduce(points, 0, fn {d, _}, acc -> acc + d end) / len}
     end
   end

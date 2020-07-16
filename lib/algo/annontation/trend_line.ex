@@ -9,22 +9,24 @@ defmodule TrendLine do
 
   defstruct lines: []
 
-  def generate(%{points: %{strong: %{bottom: bottom, top: top}}} = frame) do
-    # late_points = Enum.take(frame.points.all, -floor(length(frame.points.all) * 0.2))
+  def generate(%{points: %{strong: %{bottom: bottom, top: top}}} = mframe) do
+    # late_points = Enum.take(mframe.points.all, -floor(length(mframe.points.all) * 0.2))
+    TestUtil.is_sorted(bottom, & &1.x)
+    TestUtil.is_sorted(top, & &1.x)
 
     late_strong_points_bottom = Enum.take(bottom, -4)
     late_strong_points_top = Enum.take(top, -4)
 
     %{
-      bottom: generate(late_strong_points_bottom, frame),
-      top: generate(late_strong_points_top, frame),
-      strong_top: generate_strong(top, frame),
-      strong_bottom: generate_strong(bottom, frame)
+      bottom: generate(late_strong_points_bottom, mframe),
+      top: generate(late_strong_points_top, mframe),
+      strong_top: generate_strong(top, mframe),
+      strong_bottom: generate_strong(bottom, mframe)
     }
   end
 
   def generate([%{points_after_of_type: points} = root | roots], frame),
-    do: [create(root, points, frame) | generate(roots, frame)]
+    do: [create(root, Enum.take(points, 5), frame) | generate(roots, frame)]
 
   def generate([], _), do: []
 
@@ -37,7 +39,7 @@ defmodule TrendLine do
     TestUtil.is_sorted(points, & &1.x)
 
     lines =
-      _create([], root, Enum.take(points, 10), mframe)
+      _create([], root, points, mframe)
       |> Enum.sort_by(& &1.angle, :asc)
       |> group_by_angle_delta()
       |> merge_similar_slope_lines()

@@ -79,6 +79,7 @@ defmodule Frame do
     with {:ok, points} <- Point.generate(frame),
          {:ok, strong_points} <- StrongPoint.generate(points) do
       TestUtil.is_sorted(points, & &1.x)
+      TestUtil.is_sorted(strong_points, & &1.x)
 
       %{
         frame
