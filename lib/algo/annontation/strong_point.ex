@@ -4,7 +4,7 @@ defmodule StrongPoint do
       percent: %R{
         range: 1..10,
         denominator: 100,
-        value: 0.05
+        value: 0.04
       }
     }
 

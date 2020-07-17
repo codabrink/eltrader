@@ -3,6 +3,26 @@ require Protocol
 defmodule Util do
   def between?(number, a, b), do: number >= min(a, b) and number <= max(a, b)
 
+  def double_link(frames) do
+    IO.puts("Double linking #{length(frames)} frames...")
+
+    frames
+    |> Enum.reverse()
+    |> link(:next)
+    |> link_list(:before)
+    |> Enum.reverse()
+    |> link(:prev)
+    |> link_list(:after)
+  end
+
+  def link([frame, prev | rest], k), do: [frame | link([%{prev | k => frame} | rest], k)]
+  def link(f, _), do: f
+  def link_list([], _), do: []
+  def link_list([f | rest], k), do: [%{f | k => rest} | link_list(rest, k)]
+
+  def delink(frames),
+    do: Enum.map(frames, fn f -> %{f | prev: nil, next: nil, before: [], after: []} end)
+
   def to_ms([]), do: []
   def to_ms([a | t]), do: [to_ms(a) | to_ms(t)]
 

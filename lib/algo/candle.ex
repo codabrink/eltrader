@@ -1,22 +1,24 @@
 defmodule Candle do
-  def new(rc) when is_map(rc), do: struct(Frame, rc)
+  def new(rc) when is_map(rc) do
+    %{struct(Frame, rc) | dominion: List.to_tuple(rc.dominion)}
+  end
 
   def new(rc) do
     open = String.to_float(Enum.at(rc, 1))
     high = String.to_float(Enum.at(rc, 2))
     low = String.to_float(Enum.at(rc, 3))
     close = String.to_float(Enum.at(rc, 4))
-    all = [open, high, low, close]
 
     # Consider making geom a square
+    all = [open, high, low, close]
 
     %Frame{
+      all: all,
       open_time: Enum.at(rc, 0),
       open: open,
       high: high,
       low: low,
       close: close,
-      all: all,
       volume: String.to_float(Enum.at(rc, 5)),
       close_time: Enum.at(rc, 6),
       asset_volume: String.to_float(Enum.at(rc, 7)),

@@ -1,5 +1,5 @@
 defmodule Frame do
-  @ignore [:body_geom, :stem_geom, :before, :after, :next, :prev]
+  @ignore [:all, :body_geom, :stem_geom, :before, :after, :next, :prev]
   @derive {Jason.Encoder, except: @ignore}
   @derive {Inspect, except: @ignore}
 
@@ -29,8 +29,6 @@ defmodule Frame do
     :stake,
     :rsi_14,
     :points,
-    :_before,
-    :_after,
     before: [],
     after: [],
     trend_lines: [],
@@ -68,7 +66,8 @@ defmodule Frame do
     {time, frame} = :timer.tc(fn -> add_rsi(frame, 14) end)
     IO.puts("#{time}: Time to generate RSI")
 
-    %{frame | _before: frame.before, _after: frame.after}
+    frame
+    # %{frame | _before: frame.before, _after: frame.after}
   end
 
   def add_rsi(frame, width) do
@@ -123,33 +122,17 @@ defmodule Frame do
     Enum.slice(frames, Enum.max([index - n, 0]), n * 2 + 1)
   end
 
-  def dominion([], _), do: []
-
-  def dominion([frame | frames], mframe) do
-    db = dominion(frame.low, frame.before, frame.after, :bottom, 0)
-    dt = dominion(frame.high, frame.before, frame.after, :top, 0)
-    recentness = frame.index / mframe.index * 7
-
-    [
-      %Frame{
-        frame
-        | dominion: {db, dt},
-          importance: {db + recentness, dt + recentness}
-      }
-      | dominion(frames, mframe)
-    ]
+  def dominion([frame | frames]) do
+    db = dom(frame.low, frame.before, frame.after, :bottom, 0)
+    dt = dom(frame.high, frame.before, frame.after, :top, 0)
+    [%{frame | dominion: {db, dt}} | dominion(frames)]
   end
 
-  def dominion(y, _, [%{high: ny} | _], _, dist) when y === ny, do: dist
+  def dominion(_), do: []
 
-  def dominion(y, [%{high: py} | _], [%{high: ny} | _], :top, dist) when py > y or ny > y,
-    do: dist
-
-  def dominion(y, [%{low: py} | _], [%{low: ny} | _], :bottom, dist) when py < y or ny < y,
-    do: dist
-
-  def dominion(y, [_ | ptail], [_ | ntail], type, dist),
-    do: dominion(y, ptail, ntail, type, dist + 1)
-
-  def dominion(_, _, _, _, dist), do: dist
+  def dom(y, [%{high: pyh, low: pyl} | _], _, _, dist) when y === pyh or y === pyl, do: dist
+  def dom(y, [%{high: py} | _], [%{high: ny} | _], :top, dist) when py > y or ny > y, do: dist
+  def dom(y, [%{low: py} | _], [%{low: ny} | _], :bottom, dist) when py < y or ny < y, do: dist
+  def dom(y, [_ | ptail], [_ | ntail], type, dist), do: dom(y, ptail, ntail, type, dist + 1)
+  def dom(_, _, _, _, dist), do: dist
 end

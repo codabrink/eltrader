@@ -1,4 +1,6 @@
 defmodule Candles do
+  import Util
+
   defmodule CandleGroup do
     use TypedStruct
 
@@ -8,17 +10,12 @@ defmodule Candles do
     end
   end
 
-  def cache(symbol, interval) do
-    read_cache_from_disk(symbol, interval)
+  defp cache(symbol, interval) do
+    unless Cache.has_key?(cache_key(symbol, interval)), do: read_cache_from_disk(symbol, interval)
     Cache.get(cache_key(symbol, interval)) || []
   end
 
-  def read_cache_from_disk(symbol, interval) do
-    unless Cache.has_key?(cache_key(symbol, interval)),
-      do: _read_cache_from_disk(symbol, interval)
-  end
-
-  defp _read_cache_from_disk(symbol, interval) do
+  defp read_cache_from_disk(symbol, interval) do
     read_candles_from_disk(symbol, interval)
     |> Enum.map(fn group ->
       %CandleGroup{
@@ -29,31 +26,48 @@ defmodule Candles do
     |> (&Cache.set(cache_key(symbol, interval), &1)).()
   end
 
-  def write_cache_to_disk(cache, symbol, interval),
+  defp write_cache_to_disk(cache, symbol, interval),
     do: Enum.map(cache, & &1.candles) |> write_candles_to_disk(symbol, interval)
 
-  def write_candles_to_disk(candles, symbol, interval) do
-    handle_open = fn
-      {:ok, file} -> file
-      {:error, err} -> IO.inspect(err)
-    end
-
-    file = File.open(file_path(symbol, interval), [:write]) |> handle_open.()
+  defp write_candles_to_disk(candles, symbol, interval) do
+    IO.puts("Writing candles to disk...")
+    file = File.open!(file_path(symbol, interval), [:write])
     candles |> Jason.encode!() |> (&IO.binwrite(file, &1)).()
+    IO.puts("Closing file...")
     File.close(file)
   end
 
-  def read_candles_from_disk(symbol, interval) do
-    File.read(file_path(symbol, interval))
-    |> (fn
-          {:ok, file} ->
-            file
-            |> Jason.decode!(%{keys: :atoms!})
-            |> Enum.map(fn g -> Enum.map(g, &Candle.new/1) end)
+  defp read_candles_from_disk(symbol, interval) do
+    try do
+      File.read!(file_path(symbol, interval))
+      |> Jason.decode!(%{keys: :atoms!})
+      |> Enum.map(fn g -> Enum.map(g, &Candle.new/1) end)
+    rescue
+      _ -> []
+    end
+  end
 
-          _ ->
-            []
-        end).()
+  def build_cache() do
+    ["5m", "15m", "30m", "1h"]
+    |> Enum.map(fn t -> build_cache("BTCUSDT", t) end)
+  end
+
+  def build_cache(symbol, interval) do
+    IO.puts("Building cache for #{symbol}, #{interval}...")
+    step = to_ms(interval)
+
+    end_time = DateTime.utc_now()
+    start_time = Timex.shift(end_time, milliseconds: -(step * 7000))
+    {start_ms, end_ms} = {clean_time(start_time, interval), clean_time(end_time, interval)}
+    missing = calc_missing(symbol, interval, start_ms, end_ms)
+
+    for start_ms..end_ms <- missing do
+      fetch(symbol, interval, start_ms, end_ms)
+      |> double_link()
+      |> Frame.dominion()
+      |> delink()
+      |> cache_candles(symbol, interval)
+    end
   end
 
   def cache_candles(frames, symbol, interval) do
@@ -76,31 +90,20 @@ defmodule Candles do
     Cache.set(cache_key(symbol, interval), cache)
   end
 
-  def compile([u | unbuilt], step), do: compile(unbuilt, [u], step)
-  def compile([], built, _), do: built
-
-  def compile([u | unbuilt], built, step) do
-    compile(unbuilt, _compile(u, built, step), step)
-  end
-
-  defp _compile(u, [], _), do: [u]
-
-  defp _compile(u, [b | built], step) do
-    cond do
-      Range.Helper.adjacent?(u.k, b.k, step) -> [b | _compile(u, built, step)]
-      true -> _compile(merge_groups(u, b), built, step)
-    end
-  end
-
   def merge_groups(%{k: f1..l1, candles: c1}, %{k: f2..l2, candles: c2}),
     do: %CandleGroup{
       k: Range.new(min(f1, f2), max(l1, l2)),
       candles: c1 ++ c2
     }
 
-  @spec download_candles(String.t(), String.t(), number(), number()) :: [%Frame{}]
-  def download_candles(symbol, interval, start_ms, end_ms) do
-    if end_ms < start_ms, do: raise("end_ms must be after start_ms")
+  defp clean_time(time, interval), do: clean(to_ms(time), to_ms(interval))
+  defp clean(ms, step), do: ms - rem(ms, step)
+
+  defp fetch(symbol, interval, start_ms, last_ms) when start_ms < last_ms do
+    step = to_ms(interval)
+    end_ms = min(start_ms + step * 500, last_ms)
+
+    IO.puts("Downloading #{(end_ms - start_ms) / step} candles...")
 
     url =
       "https://api.binance.com/api/v3/klines?" <>
@@ -113,18 +116,26 @@ defmodule Candles do
       HTTPoison.get(url)
       |> case do
         {:ok, response} -> response.body
-        {:error, response} -> response
+        {:error, response} -> raise response
       end
       |> Jason.decode!(%{keys: :atoms!})
       |> Enum.map(&Candle.new/1)
 
-    last_candle = List.last(candles)
-    all? = last_candle.close_time >= end_ms
+    candles ++ fetch(symbol, interval, end_ms, last_ms)
+  end
 
-    cond do
-      all? -> candles
-      true -> candles ++ download_candles(symbol, interval, last_candle.open_time, end_ms)
-    end
+  defp fetch(_, _, _, _), do: []
+
+  defp calc_missing(symbol, interval, start_ms, end_ms) do
+    step = to_ms(interval)
+    {start_ms, end_ms} = {clean(start_ms, step), clean(end_ms, step)}
+    cache = cache(symbol, interval)
+
+    available = Enum.map(cache, & &1.k)
+
+    Range.Helper.subtract(start_ms..end_ms, available)
+    |> List.flatten()
+    |> Enum.filter(fn a..b -> abs(a - b) >= step end)
   end
 
   def candles(), do: candles("BTCUSDT", "1h")
@@ -137,30 +148,21 @@ defmodule Candles do
     candles(symbol, interval, Timex.shift(end_time, milliseconds: -(step * 500)), end_time)
   end
 
-  @spec candles(String.t(), String.t(), any, any) :: [%Frame{}]
   def candles(symbol, interval, start_time, end_time) do
-    cache = cache(symbol, interval)
-    [start_ms, end_ms] = Util.to_ms([start_time, end_time])
-    step = Util.to_ms(interval)
+    build_cache(symbol, interval)
 
-    available = Enum.map(cache, & &1.k)
+    step = to_ms(interval)
+    {start_ms, end_ms} = {clean(to_ms(start_time), step), clean(to_ms(end_time), step) + step}
 
-    missing =
-      Range.Helper.subtract(start_ms..end_ms, available)
-      |> List.flatten()
-      |> Enum.filter(fn a..b -> abs(a - b) >= step end)
+    missing = calc_missing(symbol, interval, start_ms, end_ms)
 
-    for range <- missing do
-      start_ms..end_ms = range
-
-      download_candles(symbol, interval, start_ms, end_ms)
+    for start_ms..end_ms <- missing do
+      fetch(symbol, interval, start_ms, end_ms)
       |> cache_candles(symbol, interval)
     end
 
     cache(symbol, interval)
-    |> Enum.find(fn g ->
-      Range.Helper.adjacent?(start_ms..end_ms, g.k, step)
-    end)
+    |> Enum.find(fn %{k: a..b} -> a <= start_ms and b >= end_ms end)
     |> case do
       %{candles: candles} ->
         Enum.slice(

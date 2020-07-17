@@ -1,4 +1,6 @@
 defmodule Algo do
+  import Util
+
   @default_symbol "BTCUSDT"
   @default_interval "5m"
   use Configurable,
@@ -31,30 +33,12 @@ defmodule Algo do
     frames =
       to_frames(frames, 0, nil)
       |> double_link()
-      |> (&Frame.dominion(&1, List.last(&1))).()
-      |> double_link()
-
-    frames = Frame.complete(frames)
+      |> Frame.complete()
 
     %Payload{
       frames: frames
     }
   end
-
-  def double_link(frames) do
-    frames
-    |> Enum.reverse()
-    |> link(:next)
-    |> link_list(:before)
-    |> Enum.reverse()
-    |> link(:prev)
-    |> link_list(:after)
-  end
-
-  def link([f], _), do: [f]
-  def link([frame, prev | rest], k), do: [frame | link([%{prev | k => frame} | rest], k)]
-  def link_list([], _), do: []
-  def link_list([f | rest], k), do: [%{f | k => rest} | link_list(rest, k)]
 
   def votes_for(symbol, interval, frame) do
     sim_width_hours = C.fetch(:sim_width_hours)

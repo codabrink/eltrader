@@ -8,7 +8,7 @@ defmodule Point do
       percent: %R{
         range: 5..15,
         denominator: 100,
-        value: 0.15
+        value: 0.09
       }
     }
 
@@ -45,12 +45,12 @@ defmodule Point do
 
     bottom =
       Enum.sort_by(frames, &elem(Map.get(&1, field), 0), :desc)
-      |> Enum.slice(0..len)
+      |> Enum.take(len)
       |> Enum.map(fn f -> {:bottom, f} end)
 
     top =
       Enum.sort_by(frames, &elem(Map.get(&1, field), 1), :desc)
-      |> Enum.slice(0..len)
+      |> Enum.take(len)
       |> Enum.map(fn f -> {:top, f} end)
 
     (bottom ++ top)
@@ -78,8 +78,8 @@ defmodule Point do
       type: type,
       importance:
         case type do
-          :bottom -> elem(frame.importance, 0)
-          :top -> elem(frame.importance, 1)
+          :bottom -> elem(frame.dominion, 0)
+          :top -> elem(frame.dominion, 1)
         end
     }
   end
@@ -120,6 +120,9 @@ defmodule Point do
       {[link_point(point, points, strong_points) | linked_points], linked_strong_points}
     )
   end
+
+  def link([point | points], [], {linked_points, linked_strong_points}),
+    do: link(points, [], {[link_point(point, points, []) | linked_points], linked_strong_points})
 
   def link(_, _, {linked_points, linked_strong_points}) do
     TestUtil.is_sorted(linked_points, & &1.x, :desc)
