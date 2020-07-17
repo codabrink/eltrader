@@ -58,7 +58,8 @@ defmodule TrendLine do
     line = Line.new(mframe, root, p)
 
     #  crossed_on_next_frame?(root, p, mframe)
-    with {:ok, line} <- is_line_worthless_still?(line, lines, p) do
+    with {:ok, line} <- is_line_worthless_still?(line),
+         {:ok, line} <- angle_increased_enough?([line | lines], root) do
       [line | lines]
     else
       _ -> lines
@@ -67,12 +68,10 @@ defmodule TrendLine do
   end
 
   # Don't keep the line if it goes nowhere
-  def is_line_worthless_still?(line, _, %{x: px}) do
-    case elem(line.p2, 0) do
-      ^px -> {:fail}
-      _ -> {:ok, line}
-    end
-  end
+  def is_line_worthless_still?(%{source_frames: [_, %{index: x1}], p2: %{x: x2}}) when x1 === x2,
+    do: {:fail}
+
+  def is_line_worthless_still?(line), do: {:ok, line}
 
   def group_by_angle_delta([]), do: []
   def group_by_angle_delta([line | lines]), do: group_by_angle_delta(lines, [[line]])
@@ -113,7 +112,7 @@ defmodule TrendLine do
     [merge_similar_slope_lines(lines, line) | merge_similar_slope_lines(groups)]
   end
 
-  def angle_increased_enough?(line, [prev | _], %{type: type} = root) do
+  def angle_increased_enough?([line, prev | _], %{type: type} = root) do
     delta = abs(line.angle - prev.angle)
     min_angle_delta = config(:min_angle_delta)
 
@@ -130,14 +129,16 @@ defmodule TrendLine do
             {:fail}
         end
 
-      (type === :top && line.slope > prev.slope) ||
-          (type === :bottom && line.slope < prev.slope) ->
+      (type === :top && line.angle > prev.angle) ||
+          (type === :bottom && line.angle < prev.angle) ->
         {:ok, line}
 
       true ->
         {:ok, line}
     end
   end
+
+  def angle_increased_enough([line | _], _), do: {:ok, line}
 
   defp crossed_on_next_frame?([line | lines], root, p, mframe) do
     cond do

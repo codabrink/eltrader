@@ -145,7 +145,7 @@ defmodule Candles do
 
   def candles(symbol, interval, end_time) do
     step = Util.to_ms(interval)
-    candles(symbol, interval, Timex.shift(end_time, milliseconds: -(step * 500)), end_time)
+    candles(symbol, interval, Timex.shift(end_time, milliseconds: -(step * 1000)), end_time)
   end
 
   def candles(symbol, interval, start_time, end_time) do

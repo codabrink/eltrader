@@ -17,10 +17,14 @@ export default function TrendLines({ svg, data, x, candles }) {
   ]
   for (const category of categories) {
     for (const trendLine of category.rawLines) {
-      for (const line of trendLine.lines) {
-        addPoints(line)
-        category.lines.push(line)
-      }
+      const line = trendLine.lines[0] //[trendLine.lines.length - 1]
+      if (!line) continue
+      addPoints(line)
+      category.lines.push(line)
+      // for (const line of trendLine.lines) {
+      // addPoints(line)
+      // category.lines.push(line)
+      // }
     }
   }
 

@@ -24,7 +24,7 @@ defmodule Line do
 
     cond do
       Util.between?(y, frame.high, frame.low) ||
-          distance < frame.close * 0.01 ->
+          distance < frame.close * 0.005 ->
         frame.index
 
       true ->
@@ -91,7 +91,9 @@ defmodule Line do
   end
 
   # Calculate slope
+  defp calc_slope({x1, _}, {x2, _}) when x1 === x2, do: 0
   defp calc_slope({x1, y1}, {x2, y2}), do: (y2 - y1) / (x2 - x1)
+
   # Used in the slope formula
   defp calc_b({x, y}, m), do: y - m * x
   def y_at(line, x), do: line.slope * x + line.b
